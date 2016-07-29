@@ -90,7 +90,7 @@ sub getDate ($) {
 	}
 }
 
-isJobAd($) {
+sub isJobAd($) {
 	my ($msg) = @_;
 }
 
@@ -130,7 +130,7 @@ sub getOrganization($) {
 
 sub getDomain($) {
 	my ($msg) = @_;
-	if ($msg =~ m/([\w]+\.(com|org|edu))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
+	if ($msg =~ m/(\w+.edu)/ || $msg =~ m/(\w+\.(com|org))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
 		return (lc $1);
 	}
 	return 0;
