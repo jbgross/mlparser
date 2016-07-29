@@ -26,23 +26,34 @@ sub main {
 			}
 			my ($month, $year) = &getDate($msg);
 			my $org = &getOrganization($msg);
-			$orgs{$org} = $file;
+			my $domain = &getDomain($msg);
+			if ($domain eq "0") {
+				# we have a problem, no domain
+				$orgs{"error - no org in message # $msginfilecount"} = $file;
+			} else {
+				$orgs{$domain} = $org;
+			}
 
 		}
 		close FILE;
 		$msginfilecount = 0;
 	}
 
-
-	for my $key(sort keys %orgs) {
-		print "$key $orgs{$key}\n";
-	}
+	&printOrgs(%orgs);
 
 	print scalar(keys %orgs)." different organizations\n";
 
 	$msgcount--;
-	print "$msgcount total lines in $filecount files\n";
+	print "$msgcount total messages in $filecount files\n";
 }
+
+sub printOrgs (%) {
+	my %orgs = @_;
+	for my $key(sort keys %orgs) {
+		print "$key - $orgs{$key}\n";
+	}
+}
+
 
 sub isJob($) {
 	my ($msg) = @_;
@@ -72,16 +83,30 @@ sub getDate ($) {
 sub getOrganization($) {
 	my ($msg) = @_;
 	# look for "X College" or College of X
-	if ($msg =~ m/((The )?Association(\s\w+)+)/i
+	# strip out colleges within schools
+	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
+	$msg =~ s/department of computer science//ig;
+	$msg =~ s/computer science department//ig;
+
+	if ($msg =~ m/((The )?Association (of|for)(\s\w+)+)/i
 		|| $msg =~ m/((The )?[A-Z]\w+ ([\w\&]+\s)*State (College|University) ?([\w\&\-\,]+)*)/
-		|| $msg =~ m/((The )?(College|University) of [A-Z]\w+ ?([\w\&]+\s)* ?([\w\&\-\,]+)*)/
-		|| $msg =~ m/((The )?[A-Z]\w+ ((\w+|\&)+\s)*(College|University) ?([\w\&\-\,]+)*)/
-		|| $msg =~ m/([\w\.]+(com|org|edu|us|dk))/i) {
+		|| $msg =~ m/((The )?(College|University) of [A-Z]\.\w+ ?([\w\&]+\s)* ?([\w\&\-\,]+)*)/
+		|| $msg =~ m/((The )?[A-Z]\.\w+ ((\w+|\&)+\s)*(College|University) ?([\w\&\-\,]+)*)/) {
+
 		my $org = $1;
-		$org =~ s/(.*)([\s\,]+$)/$1/;
+		$org =~ s/(.*)([\s\,\-]+$)/$1/;
 		return (lc $org);
 	}
-	print $msg."\n";
-	return "no organization found";
+	return 0;
 }
+
+sub getDomain($) {
+	my ($msg) = @_;
+	if ($msg =~ m/([\w]+\.(com|org|edu))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
+		return (lc $1);
+	}
+	return 0;
+}
+
+
 &main();
