@@ -11,6 +11,8 @@ sub main {
 	my $filecount = 0;
 	
 	my %orgs;
+	my %domains;
+
 	# now loop through the each file in the ARGV list
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
@@ -29,17 +31,25 @@ sub main {
 			my $domain = &getDomain($msg);
 			if ($domain eq "0") {
 				# we have a problem, no domain
-				$orgs{"error - no org in message # $msginfilecount"} = $file;
+				$domains{"error - no org in message # $msginfilecount"} = $file;
 			} else {
-				$orgs{$domain} = $org;
+				# overwrite an existing org if it's set to 0
+				if (exists $domains{$domain}) {
+					if($domains{$domain} eq "0") {
+						$domains{$domain} = $org;
+					}
+				} else {
+					$domains{$domain} = $org;
+				}
 			}
+			$orgs{$org} = $domain;
 
 		}
 		close FILE;
 		$msginfilecount = 0;
 	}
 
-	&printOrgs(%orgs);
+	&printOrgs(%domains);
 
 	print scalar(keys %orgs)." different organizations\n";
 
@@ -80,24 +90,42 @@ sub getDate ($) {
 	}
 }
 
+isJobAd($) {
+	my ($msg) = @_;
+}
+
 sub getOrganization($) {
 	my ($msg) = @_;
 	# look for "X College" or College of X
 	# strip out colleges within schools
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
 	$msg =~ s/department of computer science//ig;
+	$msg =~ s/fine arts//ig;
 	$msg =~ s/computer science department//ig;
+	$msg =~ s/professor//ig;
+	$msg =~ s/positions?//ig;
+	$msg =~ s/(^| )cs //ig;
 
-	if ($msg =~ m/((The )?Association (of|for)(\s\w+)+)/i
-		|| $msg =~ m/((The )?[A-Z]\w+ ([\w\&]+\s)*State (College|University) ?([\w\&\-\,]+)*)/
-		|| $msg =~ m/((The )?(College|University) of [A-Z]\.\w+ ?([\w\&]+\s)* ?([\w\&\-\,]+)*)/
-		|| $msg =~ m/((The )?[A-Z]\.\w+ ((\w+|\&)+\s)*(College|University) ?([\w\&\-\,]+)*)/) {
+	# this creates problems
+	#if ($msg =~ m/((The )?Association (of|for)(\s\w+)+)/i
+	my $last = 0;
 
-		my $org = $1;
-		$org =~ s/(.*)([\s\,\-]+$)/$1/;
-		return (lc $org);
+	# loop until we find the last one
+	while(1) {
+		if ($msg =~ s/((The )?[A-Z]\w+ ([\w\&]+\s)*State (College|University) ?([\w\&\-\,]+)*)//
+			|| $msg =~ s/((The )?(College|University) of [A-Z]\.?\w+ ?([\w\&]+\s)* ?([\w\&\-\,]+)*)//
+			|| $msg =~ s/((The )?[A-Z]\.?\w+ ((\w+|\&)+\s)*(College|University) ?([\w\&\-\,]+)*)//) {
+
+			my $org = $1;
+			$org =~ s/^(is|at) //;
+			$org =~ s/ (is|at)$//;
+			$org =~ s/(.*)([\s\,\-]+$)/$1/;
+			$last = (lc $org);
+		} else {
+			last;
+		}
 	}
-	return 0;
+	return $last;
 }
 
 sub getDomain($) {
