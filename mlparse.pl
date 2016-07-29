@@ -113,12 +113,13 @@ sub getOrganization($) {
 	# loop until we find the last one
 	while(1) {
 		if ($msg =~ s/((The )?[A-Z]\w+ ([\w\&]+\s)*State (College|University) ?([\w\&\-\,]+)*)//
-			|| $msg =~ s/((The )?(College|University) of [A-Z]\.?\w+ ?([\w\&]+\s)* ?([\w\&\-\,]+)*)//
-			|| $msg =~ s/((The )?[A-Z]\.?\w+ ((\w+|\&)+\s)*(College|University) ?([\w\&\-\,]+)*)//) {
+			|| $msg =~ s/((The )?(College|University) of [A-Z]\.?\w+ ?([\w\&]+\s)*( ([\w\&\,]+))*)//
+			|| $msg =~ s/((The )?[A-Z]\.?\w+ ((\w+|\&)+\s)*(College|University)( ([\w\&\-\,]+))*)//) {
 
 			my $org = $1;
-			$org =~ s/^(is|at) //;
-			$org =~ s/ (is|at)$//;
+			$org =~ s/ (is|or) .*//;
+			$org =~ s/^(is|at|and) //;
+			$org =~ s/ (is|at|and)$//;
 			$org =~ s/(.*)([\s\,\-]+$)/$1/;
 			$last = (lc $org);
 		} else {
@@ -130,7 +131,7 @@ sub getOrganization($) {
 
 sub getDomain($) {
 	my ($msg) = @_;
-	if ($msg =~ m/(\w+.edu)/ || $msg =~ m/(\w+\.(com|org))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
+	if ($msg =~ m/(\w+\.edu)\W/ || $msg =~ m/(\w+\.(com|org))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
 		return (lc $1);
 	}
 	return 0;
