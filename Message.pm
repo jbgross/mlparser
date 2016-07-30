@@ -29,6 +29,17 @@ sub parse ($) {
 	my $self = shift;
 	$msg = shift;
 	$self->parseReplyTo();
+
+	# merge lines ending in equals signs
+	$msg =~ s/[^=]=\n//g;
+	# strip html
+	$msg =~ s/\<.*\>//g;
+
+	# strip encoding
+	$msg =~ s/Content-Transfer-Encoding.*--//g;
+	print "$msg\n";
+
+
 	$self->getDate();
 	$self->getOrganization();
 	$self->getDomain();
@@ -110,6 +121,7 @@ sub getOrganization() {
 			|| $msg =~ s/((The )?[A-Z]\.?\w+ ((\w+|\&)+\s)*(College|University)( ([\w\&\-\,]+))*)//) {
 
 			my $org = $1;
+			print "$org\n";
 			$org =~ s/^[a-z0-9]* //;
 			$org =~ s/ (is|or) .*//;
 			$org =~ s/^(is|at|and) //;
