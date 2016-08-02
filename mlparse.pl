@@ -5,7 +5,7 @@ use Message;
 
 
 sub main {
-	# make line separator the row of == signs
+	# make line separator the row of = signs
 	$/="=========================================================================";
 	
 	my $msginfilecount = 0;
@@ -22,16 +22,25 @@ sub main {
 		for my $msgText(<FILE>) {
 			$msgcount++;
 			$msginfilecount++;
-	
-			# ignore the 1st "message", since it's just the top row
-			if ($msginfilecount == 1) {
+
+			# ignore first separator
+			if ($msginfilecount == 0) {
 				next;
 			}
+	
+			# parse the message
 			my $msg = Message->new();
 			$msg->parse($msgText);
+
+			# extract out the month & year (figure out when posted)
 			my ($month, $year) = ($msg->month(), $msg->year());
+
+			# extract organization
 			my $org = $msg->organization();
+
+			# extract domain (should be based principally on reply-to?
 			my $domain = $msg->domain();
+
 			if ($domain eq "0") {
 				# we have a problem, no domain
 				$domains{"error - no org in message # $msginfilecount"} = $file;
@@ -45,6 +54,8 @@ sub main {
 					$domains{$domain} = $org;
 				}
 			}
+
+			# add org to hash
 			$orgs{$org} = $domain;
 
 

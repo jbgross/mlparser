@@ -32,53 +32,68 @@ sub parse ($) {
 
 	# merge lines ending in equals signs
 	$msg =~ s/[^=]=\n//g;
+
+	# strip any other address in <>
+	$msg =~ s/\<[\w\._\-]+\@[\w\.]+\>//g;
+
+
+	# strip message-id
+	$msg =~ s/Message\-ID.*//g;
+
+
 	# strip html
-	$msg =~ s/\<.*\>//g;
+	$msg =~  s/\<.*\>//sg;
 
 	# strip encoding
-	$msg =~ s/Content-Transfer-Encoding.*--//g;
-	print "$msg\n";
+	#$msg =~ s/(Content-Transfer-Encoding)[\w\+\/\n]+--/\1/gs;
+
+	print "\n\n\nNEXT MESSAGE\n$msg\n";
 
 
-	$self->getDate();
-	$self->getOrganization();
-	$self->getDomain();
+	$self->parseDate();
+	$self->parseInstitutionName();
+	$self->parseDomain();
 }
 
+# return reply-to
 sub replyTo {
 	my $self = shift;
 	return $replyto;
 }
 
-
+# return domain
 sub domain {
 	my $self = shift;
 	return $domain;
 }
 
+# return the name of the organization
 sub organization {
 	my $self = shift;
 	return $organization;
 }
 
+# return the year of the post
 sub year {
 	my $self = shift;
 	return $year;
 }
 
-
+# return the month of the post
 sub month {
 	my $self = shift;
 	return $month;
 }
 
+# parse the reply-to email address
 sub parseReplyTo {
 	my $self = shift;
 	$msg =~ m/Reply-To:\s(.*)$/;
 	$replyto = $1;
 }
 
-sub getDate () {
+# parse the date of the message
+sub parseDate () {
 	#first, extract the date string
 	if($msg =~ m/Date:\s+(\w{3}), (\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) (.?\d{4})/) {
 		$day = $1;
@@ -98,7 +113,8 @@ sub getDate () {
 	}
 }
 
-sub getOrganization() {
+# get the name of the institution
+sub parseInstitutionName {
 	# strip out colleges within schools and some other stuff
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
 	$msg =~ s/department of computer science//ig;
@@ -135,7 +151,7 @@ sub getOrganization() {
 	$organization = $last;
 }
 
-sub getDomain($) {
+sub parseDomain($) {
 	if ($msg =~ m/(\w+\.edu)\W/i || $msg =~ m/(\w+\.(com|org))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
 		$domain = (lc $1);
 	}
