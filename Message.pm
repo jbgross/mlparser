@@ -45,9 +45,9 @@ sub parse ($) {
 	$msg =~  s/\<.*\>//sg;
 
 	# strip encoding
-	#$msg =~ s/(Content-Transfer-Encoding)[\w\+\/\n]+--/\1/gs;
+	$msg =~ s/(Content-Transfer-Encoding)[\w\+\/\n]+--/$1/gs;
 
-	print "\n\n\nNEXT MESSAGE\n$msg\n";
+	#print "\n\n\nNEXT MESSAGE\n$msg\n";
 
 
 	$self->parseDate();

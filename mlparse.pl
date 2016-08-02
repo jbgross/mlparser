@@ -24,7 +24,7 @@ sub main {
 			$msginfilecount++;
 
 			# ignore first separator
-			if ($msginfilecount == 0) {
+			if ($msginfilecount == 1) {
 				next;
 			}
 	
