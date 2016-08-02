@@ -41,18 +41,14 @@ sub parse ($) {
 	$msg =~ s/Message\-ID.*//g;
 
 
-	# strip html
-	$msg =~  s/\<.*\>//sg;
+	# strip html, except http
+	$msg =~  s/\<[^htp]{4}.*\>//sg;
 
 	# strip encoding
 	$msg =~ s/(Content-Transfer-Encoding)[\w\+\/\n]+--/$1/gs;
 
-	#print "\n\n\nNEXT MESSAGE\n$msg\n";
-
-
 	$self->parseDate();
 	$self->parseInstitutionName();
-	$self->parseDomain();
 }
 
 # return reply-to
@@ -89,7 +85,9 @@ sub month {
 sub parseReplyTo {
 	my $self = shift;
 	$msg =~ m/Reply-To:\s(.*)$/;
-	$replyto = $1;
+	$msg =~ s/\<([\w\._\-]+\@([\w\.]+))\>//g;
+	$replyto = lc $1;
+	$domain = lc $2;
 }
 
 # parse the date of the message
@@ -105,8 +103,6 @@ sub parseDate () {
 		$second = $7;
 		$timezone = $8;
 
-		#print "$day $date $month $year $hour $minute $second $ timezone\n";
-		return ($month, $year);
 	} elsif ($msg =~ m/(Date.*\n)/) {
 		print "date mismatch: $1";
 		return ("NA", "NA");
@@ -117,44 +113,45 @@ sub parseDate () {
 sub parseInstitutionName {
 	# strip out colleges within schools and some other stuff
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
-	$msg =~ s/department of computer science//ig;
-	$msg =~ s/fine arts//ig;
-	$msg =~ s/computing//ig;
-	$msg =~ s/computer science department//ig;
-	$msg =~ s/professor//ig;
-	$msg =~ s/positions?//ig;
-	$msg =~ s/(^| )cs //ig;
+	$msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
+	# $msg =~ s/department of computer science//ig;
+	# $msg =~ s/fine arts//ig;
+	# $msg =~ s/computing//ig;
+	# $msg =~ s/computer science department//ig;
+	# $msg =~ s/professor//ig;
+	# $msg =~ s/positions?//ig;
+	# $msg =~ s/(^| )cs //ig;
 
 	# this creates problems
 	#if ($msg =~ m/((The )?Association (of|for)(\s\w+)+)/i
 	my $last = 0;
+	my $count = 0;
 
 	# loop until we find the last one
 	while(1) {
-		# look for "X College" or "College of X" or University, etc.
-		if ($msg =~ s/((The )?[A-Z]\w+ ([\w\&]+\s)*State (College|University) ?([\w\&\-\,]+)*)//
-			|| $msg =~ s/((The )?(College|University) of [A-Z]\.?\w+ ?([\w\&]+\s)*( ([\w\&\,]+))*)//
-			|| $msg =~ s/((The )?[A-Z]\.?\w+ ((\w+|\&)+\s)*(College|University)( ([\w\&\-\,]+))*)//) {
+		my $org = "";
+		$count++;
+		my $schoolword = '(\s?[\w\&\-\,\.]*\s?)';
 
-			my $org = $1;
-			print "$org\n";
-			$org =~ s/^[a-z0-9]* //;
-			$org =~ s/ (is|or) .*//;
-			$org =~ s/^(is|at|and) //;
-			$org =~ s/ (is|at|and)$//;
-			$org =~ s/(.*)([\s\,\-]+$)/$1/;
-			$last = (lc $org);
+		# look for "X College" or "College of X" or University, etc.
+		if ($msg =~ s/((The )?$schoolword*(College|University)( of)?$schoolword)//) {
+			$org = $1;
+			print "$count - $org\n";
 		} else {
+			# no more matches
 			last;
 		}
+
+		$org =~ s/^[a-z0-9]* //;
+		$org =~ s/ (is|or) .*//;
+		$org =~ s/^(is|at|and) //;
+		$org =~ s/ (is|at|and)$//;
+		$org =~ s/(.*)([\s\,\-]+$)/$1/;
+		$last = (lc $org);
 	}
+
 	$organization = $last;
 }
 
-sub parseDomain($) {
-	if ($msg =~ m/(\w+\.edu)\W/i || $msg =~ m/(\w+\.(com|org))/i || $msg =~ m/([\w\.]+\.(us|dk))/i) {
-		$domain = (lc $1);
-	}
-}
-
+		# } elsif ($msg =~ s/((The )?(College|University) of (\w*\.?) ?([\w\s\\&\,]))//) {
 1;

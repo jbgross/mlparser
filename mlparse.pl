@@ -41,7 +41,7 @@ sub main {
 			# extract domain (should be based principally on reply-to?
 			my $domain = $msg->domain();
 
-			print "ORG $domain - $org\n";
+			print "ORG $domain - $org\n\n";
 
 			if ($domain eq "0") {
 				# we have a problem, no domain
@@ -66,7 +66,7 @@ sub main {
 		$msginfilecount = 0;
 	}
 
-	&printOrgs(%domains);
+	#&printOrgs(%domains);
 
 	print scalar(keys %orgs)." different organizations\n";
 
