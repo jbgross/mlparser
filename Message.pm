@@ -36,10 +36,8 @@ sub parse ($) {
 	# strip any other address in <>
 	$msg =~ s/\<[\w\._\-]+\@[\w\.]+\>//g;
 
-
 	# strip message-id
 	$msg =~ s/Message\-ID.*//g;
-
 
 	# strip html, except http
 	$msg =~  s/\<[^htp]{4}.*\>//sg;
@@ -84,11 +82,19 @@ sub month {
 # parse the reply-to email address
 sub parseReplyTo {
 	my $self = shift;
+	my $chars = '[\w\-\.\_]';
 	#$msg =~ m/Reply-To:\s(.*)$/;
 	#$msg =~ m/^Reply-To:\s+\<([\w\._\-]+\@([\w\.]+))\>/;
-	$msg =~ m/^Reply-To:\s+\<.+\@.+\>/;
-	$replyto = lc $1;
-	$domain = lc $2;
+	#if($msg =~ m/Reply-To:[\w\s]*\<([a-z0-9\-\_\.]+\@([a-z0-9\-\_\.]))\>/i) {
+	if($msg =~ m/Reply-To:.*($chars*\@($chars*))\>?/) {
+	#if($msg =~ m/^Reply-To:([\w\."\s]+)(.*\@.*)/) {
+	#if($msg =~ m/^Reply-To:([\w\s\.\"]+)/) {
+	#if($msg =~ m/Reply-To:/) {
+		$replyto = lc $1;
+		$domain = lc $2;
+	} else {
+		print "No Reply-To in msg\n";
+	}
 }
 
 # parse the date of the message
