@@ -83,13 +83,16 @@ sub month {
 sub parseReplyTo {
 	my $self = shift;
 	my $chars = '[\w\-\.\_]';
-	#$msg =~ m/Reply-To:\s(.*)$/;
-	#$msg =~ m/^Reply-To:\s+\<([\w\._\-]+\@([\w\.]+))\>/;
-	#if($msg =~ m/Reply-To:[\w\s]*\<([a-z0-9\-\_\.]+\@([a-z0-9\-\_\.]))\>/i) {
-	if($msg =~ m/Reply-To:.*($chars*\@($chars*))\>?/) {
-	#if($msg =~ m/^Reply-To:([\w\."\s]+)(.*\@.*)/) {
-	#if($msg =~ m/^Reply-To:([\w\s\.\"]+)/) {
-	#if($msg =~ m/Reply-To:/) {
+	my $namechars = '[\w\s\,\-\.\"]';
+	if($msg =~ m/[^In-]Reply-To:$namechars+\<($chars+\@($chars*))\>/) {
+		# name & angle brackets
+		#print "first\n";
+		$replyto = lc $1;
+		$domain = lc $2;
+	
+	} elsif ($msg =~ m/[^In-]Reply-To:\s+($chars+\@($chars+))/) {
+		# no name & angle brackets
+		#print "second\n";
 		$replyto = lc $1;
 		$domain = lc $2;
 	} else {
@@ -135,24 +138,24 @@ sub parseInstitutionName {
 	my $count = 0;
 
 	# loop until we find the last one
-	while(1) {
+	#while(1) {
 		my $org = "";
 		$count++;
-		my $schoolword = '([A-Za-z\&\-\,\.]*)';
+		my $schoolword = '([a-zA-Z]*|St\.)';
 		# splits are spaces, commas, dashes, of, or at 
-		my $split = '[ \,\-ofat]+';
+		my $split = '[ \&\,\-ofat]+';
 
-		if ($msg =~ s/($schoolword$split(College|University))//) {
+		if ($msg =~ s/(($schoolword$split){1,3}(College|University))//) {
 			# look for "X College" or "X University", etc.
 			$org = $1;
 			#print "first pattern $count - $org\n";
-		} elsif ($msg =~ s/((College|University)$split$schoolword($split$schoolword)?)//) {
+		} elsif ($msg =~ s/((College|University)$split$schoolword{1,3})//) {
 			# look for "College of X" or "University of X", etc.
 			$org = $1;
 			#print "second pattern $count - $org\n";
-		} else {
-			# no more matches
-			last;
+		#} else {
+			## no more matches
+			#last;
 		}
 
 		$org =~ s/^[a-z0-9]* //;
@@ -161,7 +164,7 @@ sub parseInstitutionName {
 		$org =~ s/ (is|at|and)$//;
 		$org =~ s/(.*)([\s\,\-]+$)/$1/;
 		$last = (lc $org);
-	}
+	#}
 
 	$organization = $last;
 }

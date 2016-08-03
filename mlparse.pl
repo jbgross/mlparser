@@ -41,7 +41,10 @@ sub main {
 			# extract domain (should be based principally on reply-to?
 			my $domain = $msg->domain();
 
-			print "ORG $domain - $org\n";
+			# extract domain (should be based principally on reply-to?
+			my $replyTo = $msg->replyTo();
+
+			print "D: $domain \t O: $org \t R: $replyTo\n";
 
 			if ($domain eq "0") {
 				# we have a problem, no domain
