@@ -84,8 +84,9 @@ sub month {
 # parse the reply-to email address
 sub parseReplyTo {
 	my $self = shift;
-	$msg =~ m/Reply-To:\s(.*)$/;
-	$msg =~ s/\<([\w\._\-]+\@([\w\.]+))\>//g;
+	#$msg =~ m/Reply-To:\s(.*)$/;
+	#$msg =~ m/^Reply-To:\s+\<([\w\._\-]+\@([\w\.]+))\>/;
+	$msg =~ m/^Reply-To:\s+\<.+\@.+\>/;
 	$replyto = lc $1;
 	$domain = lc $2;
 }
@@ -113,7 +114,7 @@ sub parseDate () {
 sub parseInstitutionName {
 	# strip out colleges within schools and some other stuff
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
-	$msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
+	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
 	# $msg =~ s/department of computer science//ig;
 	# $msg =~ s/fine arts//ig;
 	# $msg =~ s/computing//ig;
@@ -131,12 +132,18 @@ sub parseInstitutionName {
 	while(1) {
 		my $org = "";
 		$count++;
-		my $schoolword = '(\s?[\w\&\-\,\.]*\s?)';
+		my $schoolword = '([A-Za-z\&\-\,\.]*)';
+		# splits are spaces, commas, dashes, of, or at 
+		my $split = '[ \,\-ofat]+';
 
-		# look for "X College" or "College of X" or University, etc.
-		if ($msg =~ s/((The )?$schoolword*(College|University)( of)?$schoolword)//) {
+		if ($msg =~ s/($schoolword$split(College|University))//) {
+			# look for "X College" or "X University", etc.
 			$org = $1;
-			print "$count - $org\n";
+			#print "first pattern $count - $org\n";
+		} elsif ($msg =~ s/((College|University)$split$schoolword($split$schoolword)?)//) {
+			# look for "College of X" or "University of X", etc.
+			$org = $1;
+			#print "second pattern $count - $org\n";
 		} else {
 			# no more matches
 			last;
@@ -153,5 +160,4 @@ sub parseInstitutionName {
 	$organization = $last;
 }
 
-		# } elsif ($msg =~ s/((The )?(College|University) of (\w*\.?) ?([\w\s\\&\,]))//) {
 1;
