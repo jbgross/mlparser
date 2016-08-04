@@ -122,7 +122,7 @@ sub parseDate () {
 # get the name of the institution
 sub parseInstitutionName {
 	# strip out colleges within schools and some other stuff
-	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)//ig;
+	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)\w*//ig;
 	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
 	# $msg =~ s/department of computer science//ig;
 	# $msg =~ s/fine arts//ig;
@@ -141,15 +141,15 @@ sub parseInstitutionName {
 	#while(1) {
 		my $org = "";
 		$count++;
-		my $schoolword = '([a-zA-Z]*|St\.)';
+		my $schoolword = '([a-zA-Z]+|St\.)';
 		# splits are spaces, commas, dashes, of, or at 
 		my $split = '[ \&\,\-ofat]+';
 
-		if ($msg =~ s/(($schoolword$split){1,3}(College|University))//) {
+		if ($msg =~ /(($schoolword$split){1,3}(College|University))/) {
 			# look for "X College" or "X University", etc.
 			$org = $1;
 			#print "first pattern $count - $org\n";
-		} elsif ($msg =~ s/((College|University)$split$schoolword{1,3})//) {
+		} elsif ($msg =~ /((College|University)($split$schoolword){1,3})/) {
 			# look for "College of X" or "University of X", etc.
 			$org = $1;
 			#print "second pattern $count - $org\n";
@@ -157,6 +157,8 @@ sub parseInstitutionName {
 			## no more matches
 			#last;
 		}
+
+		print "$domain - $org \n";
 
 		$org =~ s/^[a-z0-9]* //;
 		$org =~ s/ (is|or) .*//;
