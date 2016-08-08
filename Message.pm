@@ -82,7 +82,7 @@ sub month {
 sub parseReplyTo {
 	my $self = shift;
 	my $chars = '[\w\-\.\_\?\=\+]';
-	my $namechars = '[\w\s\,\-\.\"\(\)\?\=\+\@\/]';
+	my $namechars = '[\w\s\,\-\.\"\'\(\)\?\=\+\@\/\\\!]';
 
 	# don't know why, but I need to reset this
 	# $replyto = 0;

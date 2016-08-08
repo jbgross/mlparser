@@ -18,6 +18,7 @@ sub main {
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
 		$filecount++;
+		print STDERR "$filecount $file\n";
 
 		# switch the line ending
 		my $oldending = $/;
@@ -87,6 +88,7 @@ sub main {
 
 	&printOrgs(%domains);
 
+	print scalar(keys %domains)." different domains\n";
 	print scalar(keys %orgs)." different organizations\n";
 
 	$msgcount--;
