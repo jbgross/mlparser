@@ -8,9 +8,6 @@ our $day = 0;
 our $date = 0;
 our $month = 0;
 our $year = 0;
-our $hour = 0;
-our $minute = 0;
-our $second = 0;
 our $timezone = 0;
 our $organization = 0;
 our $domain = 0;
@@ -111,15 +108,12 @@ sub parseReplyTo {
 # parse the date of the message
 sub parseDate () {
 	#first, extract the date string
-	if($msg =~ m/Date:\s+(\w{3}), (\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) (.?\d{4})/) {
+	#if($msg =~ m/Date:\s+(\w{3}), (\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) (.?\d{4})/) {
+	if($msg =~ m/Date:\s+(\w{3}),\s+(\d{1,2})\s+(\w{3})\s+(\d{4})/) {
 		$day = $1;
 		$date = $2;
 		$month = $3;
 		$year = $4;
-		$hour = $5;
-		$minute = $6;
-		$second = $7;
-		$timezone = $8;
 
 	} elsif ($msg =~ m/(Date.*\n)/) {
 		print "date mismatch: $1";
