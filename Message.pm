@@ -36,14 +36,23 @@ sub parse ($) {
 	# strip any other address in <>
 	$msg =~ s/\<[\w\._\-]+\@[\w\.]+\>//g;
 
+
 	# strip message-id
 	$msg =~ s/Message\-ID.*//g;
 
 	# strip html, except http
 	$msg =~  s/\<[^htp]{4}.*\>//sg;
 
+	if ($replyto eq 'kurmasz@gvsu.edu') {
+		print "Zachary\n $msg\n\n";
+	}
+
 	# strip encoding
-	$msg =~ s/(Content-Transfer-Encoding)[\w\+\/\n]+--/$1/gs;
+	$msg =~ s/(Content-Transfer-Encoding: base64)[\w\+\/\n]+--/$1/gs;
+
+	if ($replyto eq 'kurmasz@gvsu.edu') {
+		print "Zachary\n $msg\n\n";
+	}
 
 	$self->parseDate();
 	$self->parseInstitutionName();
@@ -122,6 +131,7 @@ sub parseDate () {
 # get the name of the institution
 sub parseInstitutionName {
 	# strip out colleges within schools and some other stuff
+
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)\w*//ig;
 	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
 	# $msg =~ s/department of computer science//ig;
@@ -134,41 +144,33 @@ sub parseInstitutionName {
 
 	# this creates problems
 	#if ($msg =~ m/((The )?Association (of|for)(\s\w+)+)/i
-	my $last = 0;
-	my $count = 0;
 
-	# loop until we find the last one
-	#while(1) {
-		my $org = "";
-		$count++;
-		my $schoolword = '([a-zA-Z]+|St\.)';
-		# splits are spaces, commas, dashes, of, or at 
-		my $split = '[ \&\,\-ofat]+';
+	my $org = "";
+	my $schoolword = '([a-zA-Z]+|St\.)';
+	# splits are spaces, commas, dashes, of, or at 
+	my $split = '[ \&\,\-ofat]+';
 
-		if ($msg =~ /(($schoolword$split){1,3}(College|University))/) {
-			# look for "X College" or "X University", etc.
-			$org = $1;
-			#print "first pattern $count - $org\n";
-		} elsif ($msg =~ /((College|University)($split$schoolword){1,3})/) {
-			# look for "College of X" or "University of X", etc.
-			$org = $1;
-			#print "second pattern $count - $org\n";
-		#} else {
-			## no more matches
-			#last;
-		}
+	if ($msg =~ /((College|University)( of)?($split$schoolword){1,3})/) {
+		# look for "College of X" or "University of X", etc.
+		$org = $1;
+		print "first pattern - $org\n";
+	} elsif ($msg =~ /(($schoolword$split){1,3}(College|University))/) {
+		# look for "X College" or "X University", etc.
+		$org = $1;
+		print "second pattern - $org\n";
+	} else {
+		print "no school!\n";
+	}
 
-		print "$domain - $org \n";
 
-		$org =~ s/^[a-z0-9]* //;
-		$org =~ s/ (is|or) .*//;
-		$org =~ s/^(is|at|and) //;
-		$org =~ s/ (is|at|and)$//;
-		$org =~ s/(.*)([\s\,\-]+$)/$1/;
-		$last = (lc $org);
-	#}
+	#print "$domain - $org \n";
 
-	$organization = $last;
+	$org =~ s/^[a-z0-9]* //;
+	$org =~ s/ (is|or) .*//;
+	$org =~ s/^(is|at|and) //;
+	$org =~ s/ (is|at|and)$//;
+	$org =~ s/(.*)([\s\,\-]+$)/$1/;
+	$organization = (lc $org);
 }
 
 1;
