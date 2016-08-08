@@ -27,6 +27,7 @@ sub new($) {
 
 sub parse ($) {
 	my $self = shift;
+
 	$msg = shift;
 	$self->parseReplyTo();
 
@@ -40,19 +41,11 @@ sub parse ($) {
 	# strip message-id
 	$msg =~ s/Message\-ID.*//g;
 
-	# strip html, except http
-	$msg =~  s/\<[^htp]{4}.*\>//sg;
-
-	if ($replyto eq 'kurmasz@gvsu.edu') {
-		print "Zachary\n $msg\n\n";
-	}
+	# strip html (but not content between tags)
+	$msg =~  s/\<[^\<\>]*\>//sg;
 
 	# strip encoding
 	$msg =~ s/(Content-Transfer-Encoding: base64)[\w\+\/\n]+--/$1/gs;
-
-	if ($replyto eq 'kurmasz@gvsu.edu') {
-		print "Zachary\n $msg\n\n";
-	}
 
 	$self->parseDate();
 	$self->parseInstitutionName();
@@ -130,14 +123,14 @@ sub parseDate () {
 
 # get the name of the institution
 sub parseInstitutionName {
-	# strip out colleges within schools and some other stuff
 
+	# strip out colleges within schools and some other stuff
 	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)\w*//ig;
 	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
+	# $msg =~ s/computer science department//ig;
 	# $msg =~ s/department of computer science//ig;
 	# $msg =~ s/fine arts//ig;
 	# $msg =~ s/computing//ig;
-	# $msg =~ s/computer science department//ig;
 	# $msg =~ s/professor//ig;
 	# $msg =~ s/positions?//ig;
 	# $msg =~ s/(^| )cs //ig;
@@ -148,20 +141,21 @@ sub parseInstitutionName {
 	my $org = "";
 	my $schoolword = '([a-zA-Z]+|St\.)';
 	# splits are spaces, commas, dashes, of, or at 
-	my $split = '[ \&\,\-ofat]+';
+	my $splitBefore = '[ \&\-ofat]+';
+	my $splitAfter = '[ \&\,\-ofat]+';
 
-	if ($msg =~ /((College|University)( of)?($split$schoolword){1,3})/) {
+	if ($msg =~ /((College|University)( of)?($splitAfter$schoolword){1,3})/) {
 		# look for "College of X" or "University of X", etc.
 		$org = $1;
-		print "first pattern - $org\n";
-	} elsif ($msg =~ /(($schoolword$split){1,3}(College|University))/) {
+		#print "first pattern - $org\n";
+	} elsif ($msg =~ /(($schoolword$splitBefore){1,3}(College|University))/) {
 		# look for "X College" or "X University", etc.
 		$org = $1;
-		print "second pattern - $org\n";
-	} else {
-		print "no school!\n";
+		#print "second pattern - $org\n";
+	# only for debugging
+	# } else {
+	#	print "no school!\n";
 	}
-
 
 	#print "$domain - $org \n";
 

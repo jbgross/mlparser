@@ -6,7 +6,6 @@ use Message;
 
 sub main {
 	# make line separator the row of = signs
-	$/="=========================================================================";
 	
 	my $msginfilecount = 0;
 	my $msgcount = 0;
@@ -19,6 +18,12 @@ sub main {
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
 		$filecount++;
+
+		# switch the line ending
+		my $oldending = $/;
+		my $newending="=========================================================================";
+		$/=$newending;
+
 		for my $msgText(<FILE>) {
 			$msgcount++;
 			$msginfilecount++;
@@ -27,6 +32,9 @@ sub main {
 			if ($msginfilecount == 1) {
 				next;
 			}
+
+			# temporarily switch back to old line ending
+			$/=$oldending;
 	
 			# parse the message
 			my $msg = Message->new();
@@ -63,6 +71,7 @@ sub main {
 			# add org to hash
 			$orgs{$org} = $domain;
 
+			$/=$newending;
 
 		}
 		close FILE;
