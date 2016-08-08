@@ -52,7 +52,9 @@ sub main {
 			# extract domain (should be based principally on reply-to?
 			my $replyTo = $msg->replyTo();
 
-			print "D: $domain \t O: $org \t R: $replyTo\n";
+			if($replyTo eq "0") { print "File: $file Message Number: $msginfilecount\n"; }
+
+			#print "D: $domain \t O: $org \t R: $replyTo\n";
 
 			if ($domain eq "0") {
 				# we have a problem, no domain
@@ -78,7 +80,7 @@ sub main {
 		$msginfilecount = 0;
 	}
 
-	#&printOrgs(%domains);
+	&printOrgs(%domains);
 
 	print scalar(keys %orgs)." different organizations\n";
 
@@ -88,6 +90,7 @@ sub main {
 
 sub printOrgs (%) {
 	my %orgs = @_;
+	print "Printing Orgs domain - organization\n";
 	for my $key(sort keys %orgs) {
 		print "$key - $orgs{$key}\n";
 	}

@@ -85,20 +85,25 @@ sub month {
 sub parseReplyTo {
 	my $self = shift;
 	my $chars = '[\w\-\.\_]';
-	my $namechars = '[\w\s\,\-\.\"]';
-	if($msg =~ m/[^In-]Reply-To:$namechars+\<($chars+\@($chars*))\>/) {
+	my $namechars = '[\w\s\,\-\.\"\(\)]';
+
+	# don't know why, but I need to reset this
+	# $replyto = 0;
+
+	if($msg =~ m/[^In-]*Reply-To:$namechars+\<($chars+\@($chars*))\>/) {
 		# name & angle brackets
 		#print "first\n";
 		$replyto = lc $1;
 		$domain = lc $2;
 	
-	} elsif ($msg =~ m/[^In-]Reply-To:\s+($chars+\@($chars+))/) {
+	} elsif ($msg =~ m/[^In-]*Reply-To:\s+($chars+\@($chars+))/) {
 		# no name & angle brackets
 		#print "second\n";
 		$replyto = lc $1;
 		$domain = lc $2;
 	} else {
-		print "No Reply-To in msg\n";
+		print "No Reply-To in msg $replyto\n";
+		$replyto = "0";
 	}
 }
 
@@ -125,7 +130,9 @@ sub parseDate () {
 sub parseInstitutionName {
 
 	# strip out colleges within schools and some other stuff
-	$msg =~ s/(faculty|college) of (arts|informatics|engineering|computing|comm|sci)\w*//ig;
+	$msg =~ s/(faculty|college) of? (arts|informatics|engineering|computing|comm|sci)\w*//ig;
+	$msg =~ s/(the (college|university))/$2/ig;
+
 	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
 	# $msg =~ s/computer science department//ig;
 	# $msg =~ s/department of computer science//ig;
@@ -141,15 +148,17 @@ sub parseInstitutionName {
 	my $org = "";
 	my $schoolword = '([a-zA-Z]+|St\.)';
 	# splits are spaces, commas, dashes, of, or at 
-	my $splitBefore = '[ \&\-ofat]+';
+	my $splitBefore = '[ \&ofat]+';
 	my $splitAfter = '[ \&\,\-ofat]+';
 
-	if ($msg =~ /((College|University)( of)?($splitAfter$schoolword){1,3})/) {
-		# look for "College of X" or "University of X", etc.
+	#if($replyto eq 'fredm@cs.uml.edu') { print "msg\n$msg\n\n"; }
+
+	if ($msg =~ /(($schoolword$splitBefore){1,3}(College|University))/) {
+		# look for "X College" or "X University", etc.
 		$org = $1;
 		#print "first pattern - $org\n";
-	} elsif ($msg =~ /(($schoolword$splitBefore){1,3}(College|University))/) {
-		# look for "X College" or "X University", etc.
+	} elsif ($msg =~ /((College|University)($splitAfter$schoolword){1,3})/) {
+		# look for "College of X" or "University of X", etc.
 		$org = $1;
 		#print "second pattern - $org\n";
 	# only for debugging
