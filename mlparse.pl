@@ -21,10 +21,11 @@ sub main {
 
 		# switch the line ending
 		my $oldending = $/;
-		my $newending="=========================================================================";
+		my $newending="=========================================================================\nDate:";
 		$/=$newending;
 
 		for my $msgText(<FILE>) {
+			$msgText="Date:$msgText";
 			$msgcount++;
 			$msginfilecount++;
 
@@ -52,7 +53,7 @@ sub main {
 			# extract domain (should be based principally on reply-to?
 			my $replyTo = $msg->replyTo();
 
-			if($replyTo eq "0") { print "File: $file Message Number: $msginfilecount\n"; }
+			if($replyTo eq "0") { print "File: $file Message Number: $msginfilecount\n\n\n\n\n\n\n\n\n"; }
 
 			#print "D: $domain \t O: $org \t R: $replyTo\n";
 
@@ -69,6 +70,10 @@ sub main {
 					$domains{$domain} = $org;
 				}
 			}
+
+			# let's see if it's a job
+			my $job = Job->new();
+			$job->parse($msg);
 
 			# add org to hash
 			$orgs{$org} = $domain;

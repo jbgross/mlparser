@@ -84,13 +84,13 @@ sub month {
 # parse the reply-to email address
 sub parseReplyTo {
 	my $self = shift;
-	my $chars = '[\w\-\.\_]';
-	my $namechars = '[\w\s\,\-\.\"\(\)]';
+	my $chars = '[\w\-\.\_\?\=\+]';
+	my $namechars = '[\w\s\,\-\.\"\(\)\?\=\+\@\/]';
 
 	# don't know why, but I need to reset this
 	# $replyto = 0;
 
-	if($msg =~ m/[^In-]*Reply-To:$namechars+\<($chars+\@($chars*))\>/) {
+	if($msg =~ m/[^In-]*Reply-To:$namechars+\n?\s+\<($chars+\@($chars+))\>/) {
 		# name & angle brackets
 		#print "first\n";
 		$replyto = lc $1;
@@ -102,9 +102,10 @@ sub parseReplyTo {
 		$replyto = lc $1;
 		$domain = lc $2;
 	} else {
-		print "No Reply-To in msg $replyto\n";
+		print "No Reply-To in msg $msg\n";
 		$replyto = "0";
 	}
+	$domain =~ s/.*\.(.*\.edu)/$1/i;
 }
 
 # parse the date of the message
@@ -134,8 +135,8 @@ sub parseInstitutionName {
 	$msg =~ s/(the (college|university))/$2/ig;
 
 	# $msg =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
-	# $msg =~ s/computer science department//ig;
-	# $msg =~ s/department of computer science//ig;
+	$msg =~ s/computer science department//ig;
+	$msg =~ s/department of computer science//ig;
 	# $msg =~ s/fine arts//ig;
 	# $msg =~ s/computing//ig;
 	# $msg =~ s/professor//ig;
