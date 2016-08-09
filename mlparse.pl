@@ -5,11 +5,14 @@ use Message;
 
 
 sub main {
-	# make line separator the row of = signs
+	my $jobfile = shift(@ARGV);
+	die "can't print to file $jobfile because it contains the word \"log\"\n" if ($jobfile =~ m/log/i);
+	open (JOBOUTPUT, ">", $jobfile) or die "Can't open $jobfile for writing: $!";
 	
 	my $msginfilecount = 0;
 	my $msgcount = 0;
 	my $filecount = 0;
+	my @jobs = ();
 	
 	my %orgs;
 	my %domains;
@@ -18,7 +21,7 @@ sub main {
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
 		$filecount++;
-		print STDERR "$filecount $file\n";
+		#print STDERR "$filecount $file\n";
 
 		# switch the line ending
 		my $oldending = $/;
@@ -74,7 +77,12 @@ sub main {
 
 			# let's see if it's a job
 			my $job = Job->new();
-			$job->parse($msg);
+			$job->parse($msgText);
+			if($job->isJob()) {
+				push (@jobs, $msg);
+				print "job at ".$msg->organization()."\n";
+				print JOBOUTPUT $msg->year()." ".$msg->month()." ".$msg->organization()."\n";
+			}
 
 			# add org to hash
 			$orgs{$org} = $domain;
@@ -83,13 +91,20 @@ sub main {
 
 		}
 		close FILE;
+		
 		$msginfilecount = 0;
 	}
 
-	&printOrgs(%domains);
+
+	close JOBOUTPUT;
+
+	#&printOrgs(%domains);
 
 	print scalar(keys %domains)." different domains\n";
 	print scalar(keys %orgs)." different organizations\n";
+
+	my $joblistsize = scalar @jobs;
+	print "$joblistsize jobs in the list\n";
 
 	$msgcount--;
 	print "$msgcount total messages in $filecount files\n";

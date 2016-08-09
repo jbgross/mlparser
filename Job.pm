@@ -3,14 +3,11 @@ use strict;
 
 package Job;
 
-our $job = 0;
+my $job = 0;
 
 sub new ($) {
-	my $invocant = shift;
-	my $class = ref($invocant) || $invocant;
-	my $self = { @_ }; # Remaining args become attributes
-	bless($self, $class); # Bestow objecthood
-	return $self;
+	my $class = shift;
+	bless({}, $class); # Bestow objecthood
 }
 
 sub parse($) {
@@ -18,6 +15,8 @@ sub parse($) {
 	my $msg = shift;
 	if ($msg =~ m/encouraged to apply/i) {
 		$job = 1;
+	} else {
+		$job = 0;
 	}
 }
 

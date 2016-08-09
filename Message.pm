@@ -3,23 +3,23 @@ use strict;
 
 package Message;
 
-our $msg = "";
-our $day = 0;
-our $date = 0;
-our $month = 0;
-our $year = 0;
-our $timezone = 0;
-our $organization = 0;
-our $domain = 0;
-our $contact = 0;
-our $replyto = 0;
+my $msg = "";
+my $day = 0;
+my $date = 0;
+my $month = 0;
+my $year = 0;
+my $organization = 0;
+my $domain = 0;
+my $contact = 0;
+my $replyto = 0;
 
 sub new($) {
-	my $invocant = shift;
-	my $class = ref($invocant) || $invocant;
-	my $self = { @_ }; # Remaining args become attributes
-	bless($self, $class); # Bestow objecthood
-	return $self;
+	#my $invocant = shift;
+	#my $class = ref($invocant) || $invocant;
+	#my $self = { @_  }; # Remaining args become attributes
+
+	my $class = shift;
+	bless({}, $class); # Bestow objecthood
 }
 
 sub parse ($) {
@@ -76,6 +76,12 @@ sub year {
 sub month {
 	my $self = shift;
 	return $month;
+}
+
+# return the message text of the post
+sub message {
+	my $self = shift;
+	return $msg;
 }
 
 # parse the reply-to email address
