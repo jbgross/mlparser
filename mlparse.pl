@@ -82,7 +82,7 @@ sub main {
 			$job->parse($msgText);
 			if($job->isJob()) {
 				# ignore these threads
-				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|[cC]all For [pP]art|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some|Denice Denton|Share what you|Analytic Skills|RESPECT 2016|Philosophy of assigning|Alternatives to Scratch|CFP|Share your work|Flipped classroom book|EduPLoP|ICER|TOCE Editor|Call for Participation|deadline for ACM|NSF-funded|EduHPC|Travel Grant)/) {
+				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|[cC]all For [pP]art|[cC]all for [pP]apers|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some|Denice Denton|Share what you|Analytic Skills|RESPECT 2016|Philosophy of assigning|Alternatives to Scratch|CFP|Share your work|Flipped classroom book|EduPLoP|ICER|TOCE Editor|Call for Participation|deadline for ACM|NSF-funded|EduHPC|Travel Grant|CRA invites)/) {
 					next;
 				}
 
