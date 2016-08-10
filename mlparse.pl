@@ -7,7 +7,9 @@ use Message;
 sub main {
 	my $jobfile = shift(@ARGV);
 	die "can't print to file $jobfile because it contains the word \"log\"\n" if ($jobfile =~ m/log/i);
+	my $jobmsgfile = $jobfile.".messages";
 	open (JOBOUTPUT, ">", $jobfile) or die "Can't open $jobfile for writing: $!";
+	open (JOBMESSAGES, ">", $jobmsgfile) or die "Can't open $jobmsgfile for writing: $!";
 	
 	my $msginfilecount = 0;
 	my $msgcount = 0;
@@ -79,9 +81,22 @@ sub main {
 			my $job = Job->new();
 			$job->parse($msgText);
 			if($job->isJob()) {
+				# ignore these threads
+				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|Call For Part|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some)/) {
+					next;
+				}
+
 				push (@jobs, $msg);
-				print "job at ".$msg->organization()."\n";
-				print JOBOUTPUT $msg->year()." ".$msg->month()." ".$msg->organization()."\n";
+				#print "job at ".$msg->organization()." ".$msg->replyTo()."\n";
+				my @mt = $job->matchedTerms;
+				my $mtc = scalar @mt;
+				print JOBOUTPUT $msg->year()." ".$msg->month()." ".$msg->organization()." ".
+					$msg->replyTo()." ".$job->isJob().
+				#"@mt".
+				"$mtc".
+				"\n";
+				print JOBMESSAGES "@mt"."\n";
+				print JOBMESSAGES "$msgText\n\n\n\n\n\n\n\n";
 			}
 
 			# add org to hash
@@ -97,6 +112,7 @@ sub main {
 
 
 	close JOBOUTPUT;
+	close JOBMESSAGES;
 
 	#&printOrgs(%domains);
 

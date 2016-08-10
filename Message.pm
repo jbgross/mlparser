@@ -12,6 +12,7 @@ my $organization = 0;
 my $domain = 0;
 my $contact = 0;
 my $replyto = 0;
+my $subject = 0;
 
 sub new($) {
 	#my $invocant = shift;
@@ -27,6 +28,7 @@ sub parse ($) {
 
 	$msg = shift;
 	$self->parseReplyTo();
+	$self->parseSubject();
 
 	# merge lines ending in equals signs
 	$msg =~ s/[^=]=\n//g;
@@ -46,6 +48,11 @@ sub parse ($) {
 
 	$self->parseDate();
 	$self->parseInstitutionName();
+}
+
+sub subject {
+	my $self = shift;
+	return $subject;
 }
 
 # return reply-to
@@ -82,6 +89,16 @@ sub month {
 sub message {
 	my $self = shift;
 	return $msg;
+}
+
+# parse the subject line
+sub parseSubject {
+	my $self = shift;
+	if ($msg =~ m/Subject:\s(.*)/) {
+		$subject = $1
+	} else {
+		print "no subject $replyto\n";
+	}
 }
 
 # parse the reply-to email address
