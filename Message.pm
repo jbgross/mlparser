@@ -12,6 +12,8 @@ my $organization = 0;
 my $domain = 0;
 my $contact = 0;
 my $replyto = 0;
+my $fname = "";
+my $lname = "";
 my $subject = 0;
 
 sub new($) {
@@ -50,6 +52,17 @@ sub parse ($) {
 	$self->parseInstitutionName();
 }
 
+sub firstName {
+	my $self = shift;
+	return $fname;
+}
+
+sub lastName {
+	my $self = shift;
+	return $lname;
+}
+
+	
 sub subject {
 	my $self = shift;
 	return $subject;
@@ -106,17 +119,38 @@ sub parseReplyTo {
 	my $self = shift;
 	my $chars = '[\w\-\.\_\?\=\+]';
 	my $namechars = '[\w\s\,\-\.\"\'\(\)\?\=\+\@\/\\\!]';
+	my $namecharssimple = '[\w\-\.\']';
 
 	# don't know why, but I need to reset this
 	# $replyto = 0;
 
-	if($msg =~ m/[^In-]*Reply-To:$namechars+\n?\s+\<($chars+\@($chars+))\>/) {
+	# strip the threading, messes with below
+	$msg =~ s/In-Reply.*//g;
+
+	if($msg =~ m/(Reply-To:($namechars+)\n?\s+\<($chars+\@($chars+))\>)/) {
 		# name & angle brackets
 		#print "first\n";
-		$replyto = lc $1;
-		$domain = lc $2;
+		$replyto = lc $3;
+		$domain = lc $4;
+		my $name = $2;
+		my $line = $1;
+		$name =~ s/[\-\.\"\(\)\?\=\+\@\/\\\!]//g;
+		$name =~ s/^\s*//;
+		#print "$name\n";
+		#if ($name =~ m/($namecharssimple+),\s*($namecharssimple+)\s*\</) {
+		if ($name =~ m/($namecharssimple+),\s*($namecharssimple+)/) {
+			$fname = $2;
+			$lname = $1;
+			#print "$fname - $lname\n";
+		} elsif ($name =~ m/($namecharssimple+).*\s($namecharssimple+)/) {
+			$fname = $1;
+			$lname = $2;
+			#print "$fname - $lname\n";
+		#} else {
+		#	print "Can't parse name '$name' - '$line'\n";
+		}
 	
-	} elsif ($msg =~ m/[^In-]*Reply-To:\s+($chars+\@($chars+))/) {
+	} elsif ($msg =~ m/Reply-To:\s+($chars+\@($chars+))/) {
 		# no name & angle brackets
 		#print "second\n";
 		$replyto = lc $1;
@@ -191,7 +225,8 @@ sub parseInstitutionName {
 	$org =~ s/^(is|at|and) //;
 	$org =~ s/ (is|at|and)$//;
 	$org =~ s/(.*)([\s\,\-]+$)/$1/;
-	$organization = (lc $org);
+	#$organization = (lc $org);
+	$organization = $org;
 }
 
 1;

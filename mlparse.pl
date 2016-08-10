@@ -94,6 +94,8 @@ sub main {
 					$msg->year()."\t".$msg->month()."\t".
 					$msg->organization()."\t".
 					$msg->replyTo()."\t".
+					$msg->firstName()."\t".
+					$msg->lastName()."\t".
 					$msg->subject().
 					#$job->isJob()."\t"
 					#"@mt"."\t"
