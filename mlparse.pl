@@ -88,12 +88,12 @@ sub main {
 
 				push (@jobs, $msg);
 				#print "job at ".$msg->organization()." ".$msg->replyTo()."\n";
-				my @mt = $job->matchedTerms;
+				my @mt = $job->matchedTerms();
 				my $mtc = scalar @mt;
 				print JOBOUTPUT $msg->year()." ".$msg->month()." ".$msg->organization()." ".
 					$msg->replyTo()." ".$job->isJob().
 				#"@mt".
-				"$mtc".
+				" terms: $mtc".
 				"\n";
 				print JOBMESSAGES "@mt"."\n";
 				print JOBMESSAGES "$msgText\n\n\n\n\n\n\n\n";

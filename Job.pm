@@ -71,13 +71,11 @@ sub parse($) {
 	for my $term (@searchterms) {
 		if ($msg =~ m/$term/i) {
 			$matchcount++;
+			push (@matchedterms, $term);
 		}
-		push (@matchedterms, $term);
 	}
 	$job = $matchcount/$termcount;
-	if($matchcount > 4) {
-		print "$matchcount matches $job\n";
-	}
+	#if($matchcount > 4) { print "$matchcount matches $job\n"; }
 }
 
 sub matchedTerms() {
