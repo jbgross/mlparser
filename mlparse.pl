@@ -82,7 +82,7 @@ sub main {
 			$job->parse($msgText);
 			if($job->isJob()) {
 				# ignore these threads
-				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|Call For Part|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some)/) {
+				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|Call For Part|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some|Denise Denton|Share what you|Analytic Skills)/) {
 					next;
 				}
 
@@ -90,11 +90,14 @@ sub main {
 				#print "job at ".$msg->organization()." ".$msg->replyTo()."\n";
 				my @mt = $job->matchedTerms();
 				my $mtc = scalar @mt;
-				print JOBOUTPUT $msg->year()." ".$msg->month()." ".$msg->organization()." ".
-					$msg->replyTo()." ".$job->isJob().
-				#"@mt".
-				" terms: $mtc".
-				"\n";
+				print JOBOUTPUT
+					$msg->year()." ".$msg->month()." ".
+					$msg->organization()." ".
+					$msg->replyTo()." ".
+					#$job->isJob().
+					#"@mt".
+					" terms: $mtc".
+					"\n";
 				print JOBMESSAGES "@mt"."\n";
 				print JOBMESSAGES "$msgText\n\n\n\n\n\n\n\n";
 			}

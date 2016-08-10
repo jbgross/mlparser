@@ -53,7 +53,7 @@ my @searchterms = (
 
 my $termcount = 0;
 my $job = 0;
-my $matchpercent = 0.2;
+my $matchpercent = 0.1;
 my @matchedterms = ();
 
 sub new ($) {
@@ -85,8 +85,7 @@ sub matchedTerms() {
 
 sub isJob {
 	my $self = shift;
-	#if ($job >= $matchpercent) {
-	if ($job > 0.1 && $job < $matchpercent) {
+	if ($job >= $matchpercent) {
 		return $job;
 	} else { 
 		return 0;
