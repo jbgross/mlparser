@@ -17,14 +17,9 @@ my @searchterms = (
 'positions are filled',
 'hiring',
 
-'encouraged to apply',
-'prohibits discrimination',
 'candidates',
-'equal opportunity',
-'affirmative action',
 'employer',
 'diversity',
-'background investigation',
 'title ix',
 
 'full[- ]?time',
@@ -51,9 +46,21 @@ my @searchterms = (
 'teaching statement'
 );
 
+my %sureterms = (
+'encouraged to apply' => 1,
+'prohibits discrimination' => 1,
+'equal opportunity' => 1,
+'affirmative action' => 1,
+'background investigation' => 1
+);
+
+# add the sureterms to the searchterms
+push (@searchterms, (keys %sureterms));
+
+my $sure = 0;
 my $termcount = 0;
-my $job = 0;
-my $matchpercent = 0.1;
+my $matchedpercent = 0;
+my $requiredpercent = 0.1;
 my @matchedterms = ();
 
 sub new ($) {
@@ -64,18 +71,27 @@ sub new ($) {
 sub parse($) {
 	my $self = shift;
 	@matchedterms = ();
-	$job = 0;
+	$matchedpercent = 0;
+	$sure = 0;
+	my $sureterm = "";
 	my $msg = shift;
 	$termcount = scalar @searchterms;
 	my $matchcount = 0;
 	for my $term (@searchterms) {
 		if ($msg =~ m/$term/i) {
 			$matchcount++;
+			if ($sureterms{$term}) {
+				$sure = 1;
+				$sureterm = $term;
+				last;
+			}
 			push (@matchedterms, $term);
 		}
+	
 	}
-	$job = $matchcount/$termcount;
-	#if($matchcount > 4) { print "$matchcount matches $job\n"; }
+	$matchedpercent = $matchcount/$termcount;
+	#if($matchcount > 4) { print "$matchcount matches $matchedpercent\n"; }
+	#if($sure == 1) { print "sure $sureterm\n"; }
 }
 
 sub matchedTerms() {
@@ -85,8 +101,8 @@ sub matchedTerms() {
 
 sub isJob {
 	my $self = shift;
-	if ($job >= $matchpercent) {
-		return $job;
+	if ($sure == 1 || $matchedpercent >= $requiredpercent) {
+		return $matchedpercent;
 	} else { 
 		return 0;
 	}
