@@ -3,6 +3,8 @@ use strict;
 use Job;
 use Message;
 
+my $notmatches =
+"(do you require|faculty who are poor|how do you know if|call for part|call for papers|capacity crisis in|free workshop|human resource machine|need a strange kind|is there some|denice denton|share what you|analytic skills|respect 2016|philosophy of assigning|alternatives to scratch|cfp|share your work|share what you|flipped classroom book|eduplop|icer|toce editor|deadline for acm|nsf-funded|eduhpc|travel grant|cra invites|experiences hiring into|hosting a course on github|questions regarding abet|women in cybersecurity conference|forced distribution)";
 
 sub main {
 	my $jobfile = shift(@ARGV);
@@ -18,6 +20,7 @@ sub main {
 	
 	my %orgs;
 	my %domains;
+
 
 	# now loop through the each file in the ARGV list
 	for my $file (@ARGV) {
@@ -82,7 +85,7 @@ sub main {
 			$job->parse($msgText);
 			if($job->isJob()) {
 				# ignore these threads
-				if ($msg->subject() =~ m/(Do you require|Faculty who are poor|how do you know if|[cC]all For [pP]art|[cC]all for [pP]apers|capacity crisis in|Free workshop|Human Resource Machine|Need a strange kind|Is there some|Denice Denton|Share what you|Analytic Skills|RESPECT 2016|Philosophy of assigning|Alternatives to Scratch|CFP|Share your work|Flipped classroom book|EduPLoP|ICER|TOCE Editor|Call for Participation|deadline for ACM|NSF-funded|EduHPC|Travel Grant|CRA invites)/) {
+				if ($msg->subject() =~ m/$notmatches/i) {
 					next;
 				}
 
