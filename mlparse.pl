@@ -2,9 +2,14 @@
 use strict;
 use Job;
 use Message;
+use DBI;
 
 my $notmatches =
 "(do you require|faculty who are poor|how do you know if|call for part|call for papers|capacity crisis in|free workshop|human resource machine|need a strange kind|is there some|denice denton|share what you|analytic skills|respect 2016|philosophy of assigning|alternatives to scratch|cfp|share your work|share what you|flipped classroom book|eduplop|icer|toce editor|deadline for acm|nsf-funded|eduhpc|travel grant|cra invites|experiences hiring into|hosting a course on github|questions regarding abet|women in cybersecurity conference|forced distribution)";
+
+my $dbh = 0;
+
+my $posscontactinsert = "INSERT INTO possiblecontactname (address, firstname, lastname) VALUES ()";
 
 sub main {
 	my $jobfile = shift(@ARGV);
@@ -12,6 +17,8 @@ sub main {
 	my $jobmsgfile = $jobfile.".messages";
 	open (JOBOUTPUT, ">", $jobfile) or die "Can't open $jobfile for writing: $!";
 	open (JOBMESSAGES, ">", $jobmsgfile) or die "Can't open $jobmsgfile for writing: $!";
+
+	$dbh = DBI->connect("dbi:SQLite:dbname=msgdb");
 	
 	my $msginfilecount = 0;
 	my $msgcount = 0;
@@ -122,6 +129,7 @@ sub main {
 
 	close JOBOUTPUT;
 	close JOBMESSAGES;
+	$dbh->disconnect();
 
 	#&printOrgs(%domains);
 
@@ -133,6 +141,10 @@ sub main {
 
 	$msgcount--;
 	print "$msgcount total messages in $filecount files\n";
+}
+
+sub addToDatabase {
+	my ($message, $job) = @_;
 }
 
 sub printOrgs (%) {
