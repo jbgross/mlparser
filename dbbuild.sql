@@ -1,25 +1,37 @@
 -- file to build database in sqlite3 for parsing of SIGCSE-MEMBERS mailing list
 -- author: joshua gross (gross.joshua.b@gmail.com)
-drop table if exists possibleinstitutionname;
-drop table if exists possiblecontactname;
+drop table if exists candidateinstitution;
+drop table if exists candidatecontact;
+drop table if exists message;
 
 -- these are POSSIBLE names; there might be many for a given domain
-create table possibleinstitutionname (
-nameid integer primary key,
+create table candidateinstitution (
+candidateinstitutionid integer primary key,
 domain text not null,
 name text,
 unique (domain, name) on conflict ignore
 );
 
 -- these are POSSIBLE names; there might be many for a given domain
-create table possiblecontactname (
-nameid integer primary key,
+create table candidatecontact (
+candidatecontactid integer primary key,
 address text not null,
 firstname text not null,
 lastname text not null,
 unique (address, firstname, lastname) on conflict ignore
 );
 
+create table message (
+messageid integer primary key,
+candidatecontactid integer not null,
+candidateinstitutionid integer not null,
+subject text not null,
+year integer not null,
+month integer not null,
+body text not null,
+constraint fkmessagecandidatecontactid foreign key (candidatecontactid) references candidatecontact (candidatecontactid),
+constraint fkmessagecandidateinstitutionid foreign key (candidateinstitutionid) references candidateinstitution (candidateinstitutionid)
+);
 
 /*
 create table institution (
@@ -37,11 +49,4 @@ position text,
 unique (address, firstname, lastname) on conflict ignore
 );
 
-create table message (
-replyto text not null foreign key email.address,
-subject text not null,
-year integer not null,
-month integer not null,
-body text not null
-);
 */
