@@ -24,11 +24,13 @@ unique (address, firstname, lastname) on conflict ignore
 
 create table message (
 messageid integer primary key,
+filename text not null,
 candidatecontactid integer not null,
 candidateinstitutionid integer not null,
 subject text not null,
 year integer not null,
 month integer not null,
+academicyear integer not null,
 body text not null,
 constraint fkmessagecandidatecontactid foreign key (candidatecontactid) references candidatecontact (candidatecontactid),
 constraint fkmessagecandidateinstitutionid foreign key (candidateinstitutionid) references candidateinstitution (candidateinstitutionid)
@@ -44,8 +46,9 @@ select
 	m.messageid,
 	m.month,
 	m.year,
-	substr(m.subject, 0, 25),
-	substr(m.body, 0, 25)
+	m.academicyear,
+	substr(m.subject, 0, 25) as subject,
+	substr(m.body, 0, 25) as body
 from
 	candidateinstitution ci,
 	candidatecontact cc,

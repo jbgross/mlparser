@@ -13,7 +13,10 @@ my $posscontactinsert = "INSERT INTO possiblecontactname (address, firstname, la
 
 sub main {
 
-	$dbh = DBI->connect("dbi:SQLite:dbname=msg.db") || die "Can't open database: $DBI::errstr";
+	my $dbname = shift(@ARGV);
+	die "Can't open a database with the word log in it." if ($dbname =~ m/log/i);
+
+	$dbh = DBI->connect("dbi:SQLite:dbname=$dbname") || die "Can't open database: $DBI::errstr";
 	$dbh->{AutoCommit} = 0;
 	
 	my $msginfilecount = 0;
@@ -57,7 +60,7 @@ sub main {
 
 			# parse the message
 			my $msg = Message->new();
-			$msg->parse($msgText);
+			$msg->parse($msgText, $file);
 
 			# extract out the month & year (figure out when posted)
 			my ($month, $year) = ($msg->month(), $msg->year());
@@ -90,14 +93,15 @@ sub main {
 			# let's see if it's a job
 			my $job = Job->new();
 			$job->parse($msgText);
+
+			# add to database
+			$msg->addToDatabase($dbh);
+
 			if($job->isJob()) {
 				# ignore these threads
 				if ($msg->subject() =~ m/$notmatches/i) {
 					next;
 				}
-
-				# add to database
-				$msg->addToDatabase($dbh);
 
 				push (@jobs, $msg);
 				my @mt = $job->matchedTerms();
@@ -140,7 +144,7 @@ sub main {
 	print scalar(keys %orgs)." different organizations\n";
 
 	my $joblistsize = scalar @jobs;
-	print "$joblistsize jobs in the list\n";
+	print "$joblistsize job messages in the list\n";
 
 	$msgcount--;
 	print "$msgcount total messages in $filecount files\n";

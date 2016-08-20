@@ -9,6 +9,8 @@ my $day = 0;
 my $date = 0;
 my $month = 0;
 my $year = 0;
+# this is the year that the academic year starts in - e.g., Oct 2012 is 2012, and Feb 2013 is 2012
+my $academicyear = 0;
 my $organization = 0;
 my $domain = 0;
 my $contact = 0;
@@ -17,6 +19,7 @@ my $fname = "";
 my $lname = "";
 my $subject = 0;
 my $body = "";
+my $filename = "";
 
 sub new($) {
 	#my $invocant = shift;
@@ -27,13 +30,14 @@ sub new($) {
 	bless({}, $class); # Bestow objecthood
 }
 
-sub parse ($) {
+sub parse ($$) {
 	my $self = shift;
+	$msg = shift;
+	$filename = shift;
 
 	# merge lines - doesn't work, might not need it
 	#$msg =~ s/\n^\s+(\w.*)\n/$1/g;
 
-	$msg = shift;
 	$self->parseContact();
 	$self->parseSubject();
 
@@ -117,7 +121,7 @@ sub parseSubject {
 	if ($msg =~ m/Subject:\s+(.*)/) {
 		$subject = $1;
 	} else {
-		print "no subject from email from $contactaddress on in $month, $year\n";
+		print "no subject from email from $contactaddress on in $month, $year in $filename\n";
 	}
 }
 
@@ -200,6 +204,13 @@ sub parseDate () {
 		$date = $2;
 		$month = $3;
 		$year = $4;
+		if($month =~ m/(Jan|Feb|Mar|Apr|May|Jun)/) {
+			$academicyear = $year-1;
+		} elsif ($month =~ m/(Jul|Aug|Sep|Oct|Nov|Dec)/) {
+			$academicyear = $year-1;
+		} else {
+			warn "Can't match month $month\n";
+		}
 
 	} elsif ($msg =~ m/(Date.*\n)/) {
 		print "date mismatch: $1";
@@ -287,7 +298,7 @@ sub addToDatabase {
 			return;
 		} else {
 			$ciid = (@$ref->[0])->[0];
-			print "The correct id of the inserted candidateinstitution row is $ciid\n";
+			#print "The correct id of the inserted candidateinstitution row is $ciid\n";
 		}
 		
 		$dbh->commit();
@@ -324,7 +335,7 @@ sub addToDatabase {
 			return;
 		} else {
 			$ccid = (@$ref->[0])->[0];
-			print "The correct id of the inserted candidatecontact row is $ccid\n";
+			#print "The correct id of the inserted candidatecontact row is $ccid\n";
 		}
 		
 		$dbh->commit();
@@ -339,8 +350,8 @@ sub addToDatabase {
 	eval {
 
 		my $candContactInsert = "INSERT INTO message "
-			."(candidatecontactid, candidateinstitutionid, subject, body, year, month) "
-			." values (?, ?, ?, ?, ?, ?)";
+			."(candidatecontactid, candidateinstitutionid, subject, body, year, month, academicyear, filename) "
+			." values (?, ?, ?, ?, ?, ?, ?, ?)";
 		my $sth = $dbh->prepare($candContactInsert);
 		$sth->bind_param(1, $ccid, $DBI::SQL_INTEGER);
 		$sth->bind_param(2, $ciid, $DBI::SQL_INTEGER);
@@ -348,10 +359,12 @@ sub addToDatabase {
 		$sth->bind_param(4, $body, $DBI::SQL_VARCHAR);
 		$sth->bind_param(5, $year, $DBI::SQL_INTEGER);
 		$sth->bind_param(6, $month, $DBI::SQL_INTEGER);
+		$sth->bind_param(7, $academicyear, $DBI::SQL_INTEGER);
+		$sth->bind_param(8, $filename, $DBI::SQL_VARCHAR);
 		
 		$sth->execute();
 		my $id = $dbh->last_insert_id("", "", "message", "");
-		print "The last Id of the inserted row is $id\n";
+		#print "The last Id of the inserted row is $id\n";
 		$dbh->commit();
 	};
 
