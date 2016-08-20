@@ -13,13 +13,6 @@ my $posscontactinsert = "INSERT INTO possiblecontactname (address, firstname, la
 
 sub main {
 
-	# not going to print job data to file anymore, but may need this temporarily
-	#my $jobfile = shift(@ARGV);
-	#die "can't print to file $jobfile because it contains the word \"log\"\n" if ($jobfile =~ m/log/i);
-	#my $jobmsgfile = $jobfile.".messages";
-	#open (JOBOUTPUT, ">", $jobfile) or die "Can't open $jobfile for writing: $!";
-	#open (JOBMESSAGES, ">", $jobmsgfile) or die "Can't open $jobmsgfile for writing: $!";
-
 	$dbh = DBI->connect("dbi:SQLite:dbname=msg.db") || die "Can't open database: $DBI::errstr";
 	$dbh->{AutoCommit} = 0;
 	
@@ -41,6 +34,7 @@ sub main {
 		# switch the line ending
 		my $oldending = $/;
 		my $newending="=========================================================================\nDate:";
+
 		$/=$newending;
 
 
@@ -64,9 +58,6 @@ sub main {
 			# parse the message
 			my $msg = Message->new();
 			$msg->parse($msgText);
-
-			# add to database
-			$msg->addToDatabase($dbh);
 
 			# extract out the month & year (figure out when posted)
 			my ($month, $year) = ($msg->month(), $msg->year());
@@ -105,6 +96,9 @@ sub main {
 					next;
 				}
 
+				# add to database
+				$msg->addToDatabase($dbh);
+
 				push (@jobs, $msg);
 				my @mt = $job->matchedTerms();
 				my $mtc = scalar @mt;
@@ -138,8 +132,6 @@ sub main {
 	}
 
 
-	#close JOBOUTPUT;
-	#close JOBMESSAGES;
 	$dbh->disconnect();
 
 	#&printOrgs(%domains);

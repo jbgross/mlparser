@@ -1,5 +1,6 @@
 -- file to build database in sqlite3 for parsing of SIGCSE-MEMBERS mailing list
 -- author: joshua gross (gross.joshua.b@gmail.com)
+drop view if exists messageinfo;
 drop table if exists candidateinstitution;
 drop table if exists candidatecontact;
 drop table if exists message;
@@ -32,6 +33,28 @@ body text not null,
 constraint fkmessagecandidatecontactid foreign key (candidatecontactid) references candidatecontact (candidatecontactid),
 constraint fkmessagecandidateinstitutionid foreign key (candidateinstitutionid) references candidateinstitution (candidateinstitutionid)
 );
+
+create view messageinfo as
+select
+	ci.name,
+	ci.domain,
+	cc.address,
+	cc.firstname,
+	cc.lastname,
+	m.messageid,
+	m.month,
+	m.year,
+	substr(m.subject, 0, 25),
+	substr(m.body, 0, 25)
+from
+	candidateinstitution ci,
+	candidatecontact cc,
+	message m
+where
+	m.candidateinstitutionid = ci.candidateinstitutionid
+	AND
+	m.candidatecontactid = cc.candidatecontactid;
+
 
 /*
 create table institution (

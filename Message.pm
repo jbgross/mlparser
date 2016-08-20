@@ -114,7 +114,7 @@ sub message {
 # parse the subject line
 sub parseSubject {
 	my $self = shift;
-	if ($msg =~ m/Subject:\s(.*)/) {
+	if ($msg =~ m/Subject:\s+(.*)/) {
 		$subject = $1;
 	} else {
 		print "no subject from email from $contactaddress on in $month, $year\n";
@@ -127,16 +127,17 @@ sub parseBody {
 
 	my $self = shift;
 	my $last = "";
-	while ($msg =~ s/^((([\w\-])*):\s+.*)\n//) {
+
+	# this isn't stripping some of the headers and I don't know why
+	while ($msg =~ s/^((([\w\-])*):\s.*)\n//) {
 		$last = $1;
 	}
 
-	if ($last ne "") {
-		#print "last matched - $last\n||".substr($msg, 0, 25)."||\n";
-		$body = $msg;
-	} else {
-		warn "No body!\n".substr($msg, 0, 100)."\n";
-	}
+	#print "last matched - $last\n||".substr($msg, 0, 25)."||\n";
+	# merge lines
+	$msg =~ s/\n/ /g;
+	$msg =~ s/^\s+//;
+	$body = $msg;
 }
 
 # parse the contact email address
