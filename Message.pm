@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use DBI;
 
 package Message;
 
@@ -50,6 +51,9 @@ sub parse ($) {
 
 	$self->parseDate();
 	$self->parseInstitutionName();
+	
+	# escape any single quote, so ' becomes \'
+	$msg =~ s!\'!\\\'!g;
 }
 
 sub firstName {
@@ -137,7 +141,6 @@ sub parseReplyTo {
 		$name =~ s/[\-\.\"\(\)\?\=\+\@\/\\\!]//g;
 		$name =~ s/^\s*//;
 		#print "$name\n";
-		#if ($name =~ m/($namecharssimple+),\s*($namecharssimple+)\s*\</) {
 		if ($name =~ m/($namecharssimple+),\s*($namecharssimple+)/) {
 			$fname = $2;
 			$lname = $1;
@@ -146,8 +149,6 @@ sub parseReplyTo {
 			$fname = $1;
 			$lname = $2;
 			#print "$fname - $lname\n";
-		#} else {
-		#	print "Can't parse name '$name' - '$line'\n";
 		}
 	
 	} elsif ($msg =~ m/Reply-To:\s+($chars+\@($chars+))/) {
@@ -165,7 +166,6 @@ sub parseReplyTo {
 # parse the date of the message
 sub parseDate () {
 	#first, extract the date string
-	#if($msg =~ m/Date:\s+(\w{3}), (\d{1,2}) (\w{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2}) (.?\d{4})/) {
 	if($msg =~ m/Date:\s+(\w{3}),\s+(\d{1,2})\s+(\w{3})\s+(\d{4})/) {
 		$day = $1;
 		$date = $2;
@@ -227,6 +227,28 @@ sub parseInstitutionName {
 	$org =~ s/(.*)([\s\,\-]+$)/$1/;
 	#$organization = (lc $org);
 	$organization = $org;
+}
+
+sub addToDatabase {
+	my $self = shift;
+	my $dbh = shift;
+	eval {
+
+		my $candInstInsert = "INSERT INTO candidateinstitution (DOMAIN, NAME) values (?, ?)";
+		my $sth = $dbh->prepare($candInstInsert);
+		$sth->bind_param(1, $domain, $DBI::SQL_VARCHAR);
+		$sth->bind_param(2, $organization, $DBI::SQL_VARCHAR);
+		
+		$sth->execute();
+		my $id = $dbh->last_insert_id("", "", "candidateinstitution", "");
+		print "The last Id of the inserted row is $id\n";
+		$dbh->commit();
+	};
+
+	if ($@) {
+		warn "Database error inserting candidateinstitution ($domain, $organization): $DBI::errstr";
+		$dbh->rollback();
+	}
 }
 
 1;
