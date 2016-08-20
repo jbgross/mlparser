@@ -30,10 +30,8 @@ sub new($) {
 sub parse ($) {
 	my $self = shift;
 
-	# merge lines - doesn't work, might not need it
-	#$msg =~ s/\n^\s+(\w.*)\n/$1/g;
-
 	$msg = shift;
+	# strip off trailing junk 
 	$self->parseContact();
 	$self->parseSubject();
 
@@ -123,19 +121,12 @@ sub parseSubject {
 
 # parse the subject line
 sub parseBody {
-	#print "??".substr($msg, 0, 300)."??\n";
-
 	my $self = shift;
-	my $last = "";
-	while ($msg =~ s/^((([\w\-])*):\s+.*)\n//) {
-		$last = $1;
-	}
-
-	if ($last ne "") {
-		#print "last matched - $last\n||".substr($msg, 0, 25)."||\n";
-		$body = $msg;
+	if ($msg =~ s/^((([\w\-])*):\s+)//g) {
+		$body = $1;
+		print "first matched - $body \n".substr($msg, 0, 100)."\n";
 	} else {
-		warn "No body!\n".substr($msg, 0, 100)."\n";
+		warn "No body!\".substr($msg, 0, 100)."\n";
 	}
 }
 
@@ -344,7 +335,6 @@ sub addToDatabase {
 		$sth->bind_param(1, $ccid, $DBI::SQL_INTEGER);
 		$sth->bind_param(2, $ciid, $DBI::SQL_INTEGER);
 		$sth->bind_param(3, $subject, $DBI::SQL_VARCHAR);
-		$sth->bind_param(4, $body, $DBI::SQL_VARCHAR);
 		$sth->bind_param(5, $year, $DBI::SQL_INTEGER);
 		$sth->bind_param(6, $month, $DBI::SQL_INTEGER);
 		

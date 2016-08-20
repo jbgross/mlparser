@@ -43,23 +43,28 @@ sub main {
 		my $newending="=========================================================================\nDate:";
 		$/=$newending;
 
+
 		for my $msgText(<FILE>) {
-			$msgText="Date:$msgText";
+			$msgText="Date:".$msgText;
 			$msgcount++;
 			$msginfilecount++;
 
-			# ignore first separator
+			# strip off separator (which will be at the end!)
+			$msgText =~ s/$newending//g;
+
+			# ignore first"\n"; separator
 			if ($msginfilecount == 1) {
 				next;
 			}
 
 			# temporarily switch back to old line ending
-			$/=$oldending;
-	
+			#$/=$oldending;
+			$/="\n";
+
 			# parse the message
 			my $msg = Message->new();
 			$msg->parse($msgText);
-			
+
 			# add to database
 			$msg->addToDatabase($dbh);
 
@@ -69,15 +74,13 @@ sub main {
 			# extract organization
 			my $org = $msg->organization();
 
-			# extract domain (should be based principally on reply-to?
+			# extract domain (should be based principally on contact email address) and contact email address
 			my $domain = $msg->domain();
+			my $contactaddress = $msg->contactAddress();
 
-			# extract domain (should be based principally on reply-to?
-			my $replyTo = $msg->replyTo();
+			if($contactaddress eq "0") { print "File: $file Message Number: $msginfilecount\n\n\n\n\n\n\n\n\n"; }
 
-			if($replyTo eq "0") { print "File: $file Message Number: $msginfilecount\n\n\n\n\n\n\n\n\n"; }
-
-			#print "D: $domain \t O: $org \t R: $replyTo\n";
+			#print "D: $domain \t O: $org \t R: $contactaddress\n";
 
 			if ($domain eq "0") {
 				# we have a problem, no domain
@@ -107,11 +110,11 @@ sub main {
 				my $mtc = scalar @mt;
 
 				# moving away from files to db
-				#print "job at ".$msg->organization()." ".$msg->replyTo()."\n";
+				#print "job at ".$msg->organization()." ".$msg->contactaddress()."\n";
 				#print JOBOUTPUT
 					#$msg->year()."\t".$msg->month()."\t".
 					#$msg->organization()."\t".
-					#$msg->replyTo()."\t".
+					#$msg->contactaddress()."\t".
 					#$msg->firstName()."\t".
 					#$msg->lastName()."\t".
 					#$msg->subject().
