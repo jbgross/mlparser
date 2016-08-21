@@ -86,6 +86,7 @@ sub main {
 
 			# add to database
 			$msg->addToDatabase($dbh);
+			$job->addToDatabase($dbh);
 
 
 			# split on ending again

@@ -12,6 +12,7 @@ sub new($) {
 	my $class = shift;
 
 	# set up attributes
+	$self->{messageid} = 0; # not set until addToDatabase is called
 	$self->{messagetext} = "";
 	$self->{date} = 0;
 	$self->{month} = 0;
@@ -128,6 +129,14 @@ sub messageBody {
 sub messageText {
 	my $self = shift;
 	return $self->{messagetext};
+}
+
+sub messageId {
+	my $self = shift;
+	if($self->{messageid} == 0) {
+		warn "No messageid for message '".substr($self->{subject},0,25)."' from file $self->{filename}\n";
+	}
+	return $self->{messageid};
 }
 
 # parse the subject line
@@ -371,7 +380,7 @@ sub addToDatabase {
 		$sth->bind_param(9, $self->{isjob}, $DBI::SQL_INTEGER);
 		
 		$sth->execute();
-		my $id = $dbh->last_insert_id("", "", "message", "");
+		$self->{messageid} = $dbh->last_insert_id("", "", "message", "");
 		#print "The last Id of the inserted row is $id\n";
 		$dbh->commit();
 	};

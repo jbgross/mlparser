@@ -4,6 +4,8 @@ use Message;
 
 package Job;
 
+my $requiredpercent = 0.1;
+
 my @searchterms = (
 'apply',
 'applications?',
@@ -58,7 +60,7 @@ my %sureterms = (
 # add the sureterms to the searchterms
 push (@searchterms, (keys %sureterms));
 
-my $requiredpercent = 0.1;
+# count the searchterms
 my $termcount = scalar @searchterms;
 
 sub new ($) {
@@ -67,7 +69,10 @@ sub new ($) {
 	$self->{sure} = 0;
 	$self->{sureterm} = "";
 	$self->{matchcount} = 0;
-	$self->{matchedpercent} = 0;
+	$self->{matchpercent} = 0;
+	$self->{wordcount} = 0;
+	$self->{ratio} = 0;
+	$self->{message} = "";
 	# empty array reference
 	$self->{matchedterms} = [];
 	bless($self, $class); # Bestow objecthood
@@ -75,9 +80,10 @@ sub new ($) {
 
 sub parse($) {
 	my $self = shift;
-	my $msg = shift;
+	$self->{message} = shift;
 
-	my $body = $msg->subject()." ".$msg->messageBody();
+	my $body = $self->{message}->subject()." ".$self->{message}->messageBody();
+	$self->{wordcount} = scalar (split(" ", $body));
 
 	for my $term (@searchterms) {
 		if ($body =~ m/$term/i) {
@@ -91,8 +97,9 @@ sub parse($) {
 		}
 	
 	}
-	$self->{matchedpercent} = $self->{matchcount}/$termcount;
-	#if($self->{matchcount} > 4) { print "$self->{matchcount} matches $self->{matchedpercent}\n"; }
+	$self->{matchpercent} = $self->{matchcount}/$termcount;
+	$self->{ratio} = $self->{matchcount}/$self->{wordcount};
+	#if($self->{matchcount} > 4) { print "$self->{matchcount} matches $self->{matchpercent}\n"; }
 	#if($self->{sure} == 1) { print "sure $self->{sure}term\n"; }
 }
 
@@ -103,11 +110,35 @@ sub matchedTerms() {
 
 sub isJob {
 	my $self = shift;
-	if ($self->{sure} == 1 || $self->{matchedpercent} >= $requiredpercent) {
-		return $self->{matchedpercent};
+	if ($self->{sure} == 1 || $self->{matchpercent} >= $requiredpercent) {
+		return $self->{matchpercent};
 	} else { 
 		return 0;
 	}
 }
+
+sub addToDatabase {
+	my $self = shift;
+	my $dbh = shift;
+	eval {
+		my $insertjm = "insert into jobmessage (messageid, sure, matchcount, matchpercent, wordcount, ratio) ".
+				"values (?, ?, ?, ?, ?, ?)";
+		my $sth = $dbh->prepare($insertjm);
+		$sth->bind_param(1, $self->{message}->messageId(), $DBI::SQL_INTEGER);
+		$sth->bind_param(2, $self->{sure}, $DBI::SQL_INTEGER);
+		$sth->bind_param(3, $self->{matchcount}, $DBI::SQL_INTEGER);
+		$sth->bind_param(4, $self->{matchpercent}, $DBI::SQL_DOUBLE);
+		$sth->bind_param(5, $self->{wordcount}, $DBI::SQL_INTEGER);
+		$sth->bind_param(6, $self->{ratio}, $DBI::SQL_DOUBLE);
+		$sth->execute();
+		$dbh->commit();
+	};
+
+	if(@_) {
+		warn "Error inserting jobmessage messageid: $self->{message}->messageId()\n";
+		$dbh->rollback();
+	}
+}
+
 
 1;

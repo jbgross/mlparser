@@ -43,6 +43,12 @@ constraint fkmessagecandidateinstitutionid foreign key (candidateinstitutionid) 
 -- tenuretrack and non-tenure-track (should catch all spelling variants)
 create table jobmessage (
 messageid integer not null primary key,
+sure integer not null,
+matchcount integer not null,
+matchpercent real not null,
+wordcount integer not null,
+ratio real not null,
+/*
 tenured integer not null,
 tenuretrack integer not null,
 nontenuretrack integer not null,
@@ -53,11 +59,13 @@ professorofpractice integer not null,
 phd integer not null,
 masters integer not null,
 securityofemployment integer not null,
+temporaryfixed integer not null,
 visiting integer not null,
 multiple integer not null,
 fulltime integer not null,
 parttime integer not null,
 rankopen integer not null,
+*/
 constraint fkjobmessagemessageid foreign key (messageid) references message (messageid)
 );
 
