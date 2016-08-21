@@ -31,9 +31,33 @@ subject text not null,
 year integer not null,
 month integer not null,
 academicyear integer not null,
+isjob integer not null,
 body text not null,
 constraint fkmessagecandidatecontactid foreign key (candidatecontactid) references candidatecontact (candidatecontactid),
 constraint fkmessagecandidateinstitutionid foreign key (candidateinstitutionid) references candidateinstitution (candidateinstitutionid)
+);
+
+-- each of the integer columns other than messageid is a boolean, a 1 if the term is present
+-- and a 0 if the term is not present; therefore there may be jobmessages that say both
+-- tenuretrack and non-tenure-track (should catch all spelling variants)
+create table jobmessage (
+messageid integer not null primary key,
+tenured integer not null,
+tenuretrack integer not null,
+nontenuretrack integer not null,
+instructor integer not null,
+lecturer integer not null,
+teachingprofessor integer not null,
+professorofpractice integer not null,
+phd integer not null,
+masters integer not null,
+securityofemployment integer not null,
+visiting integer not null,
+multiple integer not null,
+fulltime integer not null,
+parttime integer not null,
+rankopen integer not null,
+constraint fkjobmessagemessageid foreign key (messageid) references message (messageid)
 );
 
 create view messageinfo as

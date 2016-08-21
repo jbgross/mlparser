@@ -65,7 +65,8 @@ my @matchedterms = ();
 
 sub new ($) {
 	my $class = shift;
-	bless({}, $class); # Bestow objecthood
+	my $self = {};
+	bless($self, $class); # Bestow objecthood
 }
 
 sub parse($) {
