@@ -10,13 +10,15 @@ sub new($) {
 	my $self = { };
 
 	my $class = shift;
-	bless($self, $class); # Bestow objecthood
+
+	# set up attributes
 	$self->{messagetext} = "";
 	$self->{date} = 0;
 	$self->{month} = 0;
 	$self->{year} = 0;
-	$self->{academicyear} = 0;
 	# this is the year that the academic year starts in - e.g., Oct 2012 is 2012, and Feb 2013 is 2012
+	$self->{academicyear} = 0;
+	$self->{isjob} = 0;
 	$self->{organization} = "";
 	$self->{domain} = "";
 	$self->{contactaddress} = "";
@@ -25,6 +27,8 @@ sub new($) {
 	$self->{subject} = "";
 	$self->{messagebody} = "";
 	$self->{filename} = "";
+
+	bless($self, $class); # Bestow objecthood
 }
 
 sub parse ($$$) {
@@ -58,6 +62,14 @@ sub parse ($$$) {
 	$self->parseInstitutionName();
 	
 	$self->parseBody();
+}
+
+# pass in anything other than a 0 to set this to true
+sub setJob {
+	my $self = shift;
+	if(shift ne "0") {
+		$self->{isjob} = 1;
+	}
 }
 
 sub firstName {
@@ -107,7 +119,13 @@ sub month {
 }
 
 # return the message text of the post
-sub message {
+sub messageBody {
+	my $self = shift;
+	return $self->{messagebody};
+}
+
+# return the message text of the post
+sub messageText {
 	my $self = shift;
 	return $self->{messagetext};
 }
@@ -182,8 +200,7 @@ sub parseContact {
 		$self->{firstname} = "";
 		$self->{lastname}  = "";
 	} else {
-		print "No Reply-To or From in msg $self->{messagetext}\n";
-		$self->{contactaddress} = "0";
+		warn "No Reply-To or From in msg ". substr($self->{messagetext},0,25)."in file $self-{filename}\n";
 	}
 	$self->{domain} =~ s/.*\.(.*\.edu)/$1/i;
 }
@@ -249,8 +266,6 @@ sub parseInstitutionName {
 	# } else {
 	#	print "no school!\n";
 	}
-
-	#print "$self->{domain} - $org \n";
 
 	$org =~ s/^[a-z0-9]* //;
 	$org =~ s/ (is|or) .*//;
@@ -342,8 +357,8 @@ sub addToDatabase {
 	eval {
 
 		my $candContactInsert = "INSERT INTO message "
-			."(candidatecontactid, candidateinstitutionid, subject, body, year, month, academicyear, filename) "
-			." values (?, ?, ?, ?, ?, ?, ?, ?)";
+			."(candidatecontactid, candidateinstitutionid, subject, body, year, month, academicyear, filename, isjob) "
+			." values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		my $sth = $dbh->prepare($candContactInsert);
 		$sth->bind_param(1, $ccid, $DBI::SQL_INTEGER);
 		$sth->bind_param(2, $ciid, $DBI::SQL_INTEGER);
@@ -353,6 +368,7 @@ sub addToDatabase {
 		$sth->bind_param(6, $self->{month}, $DBI::SQL_INTEGER);
 		$sth->bind_param(7, $self->{academicyear}, $DBI::SQL_INTEGER);
 		$sth->bind_param(8, $self->{filename}, $DBI::SQL_VARCHAR);
+		$sth->bind_param(9, $self->{isjob}, $DBI::SQL_INTEGER);
 		
 		$sth->execute();
 		my $id = $dbh->last_insert_id("", "", "message", "");

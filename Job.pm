@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 use strict;
+use Message;
 
 package Job;
 
@@ -57,53 +58,53 @@ my %sureterms = (
 # add the sureterms to the searchterms
 push (@searchterms, (keys %sureterms));
 
-my $sure = 0;
-my $termcount = 0;
-my $matchedpercent = 0;
 my $requiredpercent = 0.1;
-my @matchedterms = ();
+my $termcount = scalar @searchterms;
 
 sub new ($) {
 	my $class = shift;
 	my $self = {};
+	$self->{sure} = 0;
+	$self->{sureterm} = "";
+	$self->{matchcount} = 0;
+	$self->{matchedpercent} = 0;
+	# empty array reference
+	$self->{matchedterms} = [];
 	bless($self, $class); # Bestow objecthood
 }
 
 sub parse($) {
 	my $self = shift;
-	@matchedterms = ();
-	$matchedpercent = 0;
-	$sure = 0;
-	my $sureterm = "";
 	my $msg = shift;
-	$termcount = scalar @searchterms;
-	my $matchcount = 0;
+
+	my $body = $msg->subject()." ".$msg->messageBody();
+
 	for my $term (@searchterms) {
-		if ($msg =~ m/$term/i) {
-			$matchcount++;
+		if ($body =~ m/$term/i) {
+			$self->{matchcount}++;
 			if ($sureterms{$term}) {
-				$sure = 1;
-				$sureterm = $term;
+				$self->{sure} = 1;
+				$self->{sureterm} = $term;
 				last;
 			}
-			push (@matchedterms, $term);
+			push ($self->{matchedterms}, $term);
 		}
 	
 	}
-	$matchedpercent = $matchcount/$termcount;
-	#if($matchcount > 4) { print "$matchcount matches $matchedpercent\n"; }
-	#if($sure == 1) { print "sure $sureterm\n"; }
+	$self->{matchedpercent} = $self->{matchcount}/$termcount;
+	#if($self->{matchcount} > 4) { print "$self->{matchcount} matches $self->{matchedpercent}\n"; }
+	#if($self->{sure} == 1) { print "sure $self->{sure}term\n"; }
 }
 
 sub matchedTerms() {
 	my $self = shift;
-	return @matchedterms;
+	return $self->{matchedterms};
 }
 
 sub isJob {
 	my $self = shift;
-	if ($sure == 1 || $matchedpercent >= $requiredpercent) {
-		return $matchedpercent;
+	if ($self->{sure} == 1 || $self->{matchedpercent} >= $requiredpercent) {
+		return $self->{matchedpercent};
 	} else { 
 		return 0;
 	}

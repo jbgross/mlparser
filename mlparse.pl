@@ -9,8 +9,6 @@ my $notmatches =
 
 my $dbh = 0;
 
-my $posscontactinsert = "INSERT INTO possiblecontactname (address, firstname, lastname) VALUES ()";
-
 sub main {
 
 	my $dbname = shift(@ARGV);
@@ -22,17 +20,15 @@ sub main {
 	my $msginfilecount = 0;
 	my $msgcount = 0;
 	my $filecount = 0;
-	my @jobs = ();
+	my $jobcount = 0;
 	
 	my %orgs;
 	my %domains;
-
 
 	# now loop through the each file in the ARGV list
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
 		$filecount++;
-		#print STDERR "$filecount $file\n";
 
 		# switch the line ending
 		my $oldending = $/;
@@ -55,78 +51,44 @@ sub main {
 			}
 
 			# temporarily switch back to old line ending
-			#$/=$oldending;
-			$/="\n";
+			$/=$oldending;
 
 			# parse the message
 			my $msg = Message->new();
 			$msg->parse($msgText, $file);
 
-			# extract out the month & year (figure out when posted)
-			my ($month, $year) = ($msg->month(), $msg->year());
-
-			# extract organization
+			# extract organization and domain
 			my $org = $msg->organization();
-
-			# extract domain (should be based principally on contact email address) and contact email address
 			my $domain = $msg->domain();
-			my $contactaddress = $msg->contactAddress();
 
-			if($contactaddress eq "0") { print "File: $file Message Number: $msginfilecount\n\n\n\n\n\n\n\n\n"; }
-
-			#print "D: $domain \t O: $org \t R: $contactaddress\n";
-
-			if ($domain eq "0") {
-				# we have a problem, no domain
-				$domains{"error - no org in message # $msginfilecount"} = $file;
-			} else {
-				# overwrite an existing org if it's set to 0
-				if (exists $domains{$domain}) {
-					if($domains{$domain} eq "0") {
-						$domains{$domain} = $org;
-					}
-				} else {
+			# overwrite an existing org if it's set to empty string
+			if (exists $domains{$domain}) {
+				if($domains{$domain} eq "") {
 					$domains{$domain} = $org;
 				}
-			}
-
-			# let's see if it's a job
-			my $job = Job->new();
-			$job->parse($msgText);
-
-			# add to database
-			$msg->addToDatabase($dbh);
-
-			if($job->isJob()) {
-				# ignore these threads
-				if ($msg->subject() =~ m/$notmatches/i) {
-					next;
-				}
-
-				push (@jobs, $msg);
-				my @mt = $job->matchedTerms();
-				my $mtc = scalar @mt;
-
-				# moving away from files to db
-				#print "job at ".$msg->organization()." ".$msg->contactaddress()."\n";
-				#print JOBOUTPUT
-					#$msg->year()."\t".$msg->month()."\t".
-					#$msg->organization()."\t".
-					#$msg->contactaddress()."\t".
-					#$msg->firstName()."\t".
-					#$msg->lastName()."\t".
-					#$msg->subject().
-					#$job->isJob()."\t"
-					#"@mt"."\t"
-					#" terms: $mtc"."\t"
-					#"\n";
-				#print JOBMESSAGES "@mt"."\n";
-				#print JOBMESSAGES "$msgText\n\n\n\n\n\n\n\n";
+			} else {
+				$domains{$domain} = $org;
 			}
 
 			# add org to hash
 			$orgs{$org} = $domain;
 
+			# let's see if it's a job
+			my $job = Job->new();
+			$job->parse($msg);
+
+			if($job->isJob()) {
+				if ($msg->subject() !~ m/$notmatches/i) {
+					$msg->setJob(1);
+					$jobcount++;
+				}
+			}
+
+			# add to database
+			$msg->addToDatabase($dbh);
+
+
+			# split on ending again
 			$/=$newending;
 
 		}
@@ -143,8 +105,7 @@ sub main {
 	print scalar(keys %domains)." different domains\n";
 	print scalar(keys %orgs)." different organizations\n";
 
-	my $joblistsize = scalar @jobs;
-	print "$joblistsize job messages in the list\n";
+	print "$jobcount job messages in the list\n";
 
 	$msgcount--;
 	print "$msgcount total messages in $filecount files\n";

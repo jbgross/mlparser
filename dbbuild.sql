@@ -4,6 +4,7 @@ drop view if exists messageinfo;
 drop table if exists candidateinstitution;
 drop table if exists candidatecontact;
 drop table if exists message;
+drop table if exists jobmessage;
 
 -- these are POSSIBLE names; there might be many for a given domain
 create table candidateinstitution (
@@ -71,6 +72,7 @@ select
 	m.month,
 	m.year,
 	m.academicyear,
+	m.isjob,
 	substr(m.subject, 0, 25) as subject,
 	substr(m.body, 0, 25) as body
 from
