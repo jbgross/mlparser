@@ -6,6 +6,8 @@ package Job;
 
 my $requiredpercent = 0.1;
 
+my $badsubjects = "(do you require|faculty who are poor|how do you know if|call for part|call for papers|capacity crisis in|free workshop|human resource machine|need a strange kind|is there some|denice denton|share what you|analytic skills|respect 2016|philosophy of assigning|alternatives to scratch|cfp|share your work|share what you|flipped classroom book|eduplop|icer|toce editor|deadline for acm|nsf-funded|eduhpc|travel grant|cra invites|experiences hiring into|hosting a course on github|questions regarding abet|women in cybersecurity conference|forced distribution|CSAB)";
+
 my @searchterms = (
 'apply',
 'applications?',
@@ -72,6 +74,7 @@ sub new ($) {
 	$self->{matchpercent} = 0;
 	$self->{wordcount} = 0;
 	$self->{ratio} = 0;
+	$self->{badsubject} = 0;
 	$self->{message} = "";
 	# empty array reference
 	$self->{matchedterms} = [];
@@ -84,6 +87,12 @@ sub parse($) {
 
 	my $body = $self->{message}->subject()." ".$self->{message}->messageBody();
 	$self->{wordcount} = scalar (split(" ", $body));
+
+	if ($self->{message}->subject() =~ m/$badsubjects/i) {
+		$self->{badsubject} = 1;
+		return;
+	}
+
 
 	for my $term (@searchterms) {
 		if ($body =~ m/$term/i) {
@@ -121,8 +130,8 @@ sub addToDatabase {
 	my $self = shift;
 	my $dbh = shift;
 	eval {
-		my $insertjm = "insert into jobmessage (messageid, sure, matchcount, matchpercent, wordcount, ratio) ".
-				"values (?, ?, ?, ?, ?, ?)";
+		my $insertjm = "insert into jobmessage (messageid, sure, matchcount, matchpercent, wordcount, ratio, badsubject) ".
+				"values (?, ?, ?, ?, ?, ?, ?)";
 		my $sth = $dbh->prepare($insertjm);
 		$sth->bind_param(1, $self->{message}->messageId(), $DBI::SQL_INTEGER);
 		$sth->bind_param(2, $self->{sure}, $DBI::SQL_INTEGER);
@@ -130,6 +139,7 @@ sub addToDatabase {
 		$sth->bind_param(4, $self->{matchpercent}, $DBI::SQL_DOUBLE);
 		$sth->bind_param(5, $self->{wordcount}, $DBI::SQL_INTEGER);
 		$sth->bind_param(6, $self->{ratio}, $DBI::SQL_DOUBLE);
+		$sth->bind_param(7, $self->{badsubject}, $DBI::SQL_INTEGER);
 		$sth->execute();
 		$dbh->commit();
 	};

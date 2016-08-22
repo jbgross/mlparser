@@ -4,6 +4,35 @@ use DBI;
 
 package Message;
 
+my $dbh = "";
+my $messageInsert = "INSERT INTO message "
+		."(candidatecontactid, candidateinstitutionid, subject, body, year, month, academicyear, filename, isjob) "
+		." values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+my $misth = "";
+
+my $candInstInsert = "INSERT INTO candidateinstitution (DOMAIN, NAME) values (?, ?)";
+my $ciisth = "";
+
+my $candInstIdSelect = "SELECT candidateinstitutionid from candidateinstitution where domain = ? and name = ?";
+my $ciissth = "";
+
+my $candidateContactInsert = "INSERT INTO candidatecontact (ADDRESS, FIRSTNAME, LASTNAME) values (?, ?, ?)";
+my $ccisth = "";
+
+# can't use last_insert_id since repeats are ignored
+my $candContactIdSelect = "SELECT candidatecontactid from candidatecontact where address= ? and firstname = ? and lastname = ?";
+my $ccissth = "";
+
+sub addDatabase($) {
+	$dbh = shift;
+	$misth = $dbh->prepare($messageInsert);
+	$ciisth = $dbh->prepare($candInstInsert);
+	$ciissth = $dbh->prepare($candInstIdSelect);
+	$ccisth = $dbh->prepare($candidateContactInsert);
+	$ccissth = $dbh->prepare($candContactIdSelect);
+}
+
+
 sub new($) {
 	#my $invocant = shift;
 	#my $class = ref($invocant) || $invocant;
@@ -294,21 +323,17 @@ sub addToDatabase {
 	# insert candidate institution information
 	eval {
 
-		my $candInstInsert = "INSERT INTO candidateinstitution (DOMAIN, NAME) values (?, ?)";
-		my $sth = $dbh->prepare($candInstInsert);
-		$sth->bind_param(1, $self->{domain}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(2, $self->{organization}, $DBI::SQL_VARCHAR);
+		$ciisth->bind_param(1, $self->{domain}, $DBI::SQL_VARCHAR);
+		$ciisth->bind_param(2, $self->{organization}, $DBI::SQL_VARCHAR);
 		
-		$sth->execute();
+		$ciisth->execute();
 
 		# can't use last_insert_id since repeats are ignored
-		my $candIdSelect = "SELECT candidateinstitutionid from candidateinstitution where domain = ? and name = ?";
-		$sth = $dbh->prepare($candIdSelect);
-		$sth->bind_param(1, $self->{domain}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(2, $self->{organization}, $DBI::SQL_VARCHAR);
-		$sth->execute();
+		$ciissth->bind_param(1, $self->{domain}, $DBI::SQL_VARCHAR);
+		$ciissth->bind_param(2, $self->{organization}, $DBI::SQL_VARCHAR);
+		$ciissth->execute();
 
-		my $ref = $sth->fetchall_arrayref();
+		my $ref = $ciissth->fetchall_arrayref();
 		if (scalar @$ref != 1) {
 			warn "No or multiple matching candidateinstitutionid for $self->{domain}, $self->{organization}.\n";
 			return;
@@ -328,24 +353,19 @@ sub addToDatabase {
 	# insert candidate contact information
 	eval {
 
-		my $candidateContactInsert = "INSERT INTO candidatecontact (ADDRESS, FIRSTNAME, LASTNAME) values (?, ?, ?)";
-		my $sth = $dbh->prepare($candidateContactInsert);
-		$sth->bind_param(1, $self->{contactaddress}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(2, $self->{firstname}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(3, $self->{lastname}, $DBI::SQL_VARCHAR);
+		$ccisth->bind_param(1, $self->{contactaddress}, $DBI::SQL_VARCHAR);
+		$ccisth->bind_param(2, $self->{firstname}, $DBI::SQL_VARCHAR);
+		$ccisth->bind_param(3, $self->{lastname}, $DBI::SQL_VARCHAR);
 		
-		$sth->execute();
+		$ccisth->execute();
 
-		# can't use last_insert_id since repeats are ignored
-		my $candIdSelect = "SELECT candidatecontactid from candidatecontact where address= ? and firstname = ? and lastname = ?";
-		$sth = $dbh->prepare($candIdSelect);
-		$sth->bind_param(1, $self->{contactaddress}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(2, $self->{firstname}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(3, $self->{lastname}, $DBI::SQL_VARCHAR);
+		$ccissth->bind_param(1, $self->{contactaddress}, $DBI::SQL_VARCHAR);
+		$ccissth->bind_param(2, $self->{firstname}, $DBI::SQL_VARCHAR);
+		$ccissth->bind_param(3, $self->{lastname}, $DBI::SQL_VARCHAR);
 
-		$sth->execute();
+		$ccissth->execute();
 
-		my $ref = $sth->fetchall_arrayref();
+		my $ref = $ccissth->fetchall_arrayref();
 		if (scalar @$ref != 1) {
 			warn "No or multiple matching candidatecontactid for $self->{contactaddress}, $self->{firstname}, $self->{lastname}\n";
 			return;
@@ -365,21 +385,17 @@ sub addToDatabase {
 	# insert message information
 	eval {
 
-		my $candContactInsert = "INSERT INTO message "
-			."(candidatecontactid, candidateinstitutionid, subject, body, year, month, academicyear, filename, isjob) "
-			." values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		my $sth = $dbh->prepare($candContactInsert);
-		$sth->bind_param(1, $ccid, $DBI::SQL_INTEGER);
-		$sth->bind_param(2, $ciid, $DBI::SQL_INTEGER);
-		$sth->bind_param(3, $self->{subject}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(4, $self->{messagebody}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(5, $self->{year}, $DBI::SQL_INTEGER);
-		$sth->bind_param(6, $self->{month}, $DBI::SQL_INTEGER);
-		$sth->bind_param(7, $self->{academicyear}, $DBI::SQL_INTEGER);
-		$sth->bind_param(8, $self->{filename}, $DBI::SQL_VARCHAR);
-		$sth->bind_param(9, $self->{isjob}, $DBI::SQL_INTEGER);
+		$misth->bind_param(1, $ccid, $DBI::SQL_INTEGER);
+		$misth->bind_param(2, $ciid, $DBI::SQL_INTEGER);
+		$misth->bind_param(3, $self->{subject}, $DBI::SQL_VARCHAR);
+		$misth->bind_param(4, $self->{messagebody}, $DBI::SQL_VARCHAR);
+		$misth->bind_param(5, $self->{year}, $DBI::SQL_INTEGER);
+		$misth->bind_param(6, $self->{month}, $DBI::SQL_INTEGER);
+		$misth->bind_param(7, $self->{academicyear}, $DBI::SQL_INTEGER);
+		$misth->bind_param(8, $self->{filename}, $DBI::SQL_VARCHAR);
+		$misth->bind_param(9, $self->{isjob}, $DBI::SQL_INTEGER);
 		
-		$sth->execute();
+		$misth->execute();
 		$self->{messageid} = $dbh->last_insert_id("", "", "message", "");
 		#print "The last Id of the inserted row is $id\n";
 		$dbh->commit();

@@ -16,6 +16,8 @@ sub main {
 
 	$dbh = DBI->connect("dbi:SQLite:dbname=$dbname") || die "Can't open database: $DBI::errstr";
 	$dbh->{AutoCommit} = 0;
+
+	Message::addDatabase($dbh);
 	
 	my $msginfilecount = 0;
 	my $msgcount = 0;
@@ -28,6 +30,8 @@ sub main {
 	# now loop through the each file in the ARGV list
 	for my $file (@ARGV) {
 		open (FILE, "<", $file) or die "Can't open $file for reading: $!";
+
+		warn "File $file starting message count: $msgcount\n";
 		$filecount++;
 
 		# switch the line ending
@@ -92,11 +96,20 @@ sub main {
 			# split on ending again
 			$/=$newending;
 
-		}
+		} # done parsing each message
+
 		close FILE;
+
+		# need to remove first false message for each file
+		$msgcount--;
+		$msginfilecount--;
+
+		warn "File $file ending message count: $msgcount which should be before plus $msginfilecount\n";
 		
+		# reset
 		$msginfilecount = 0;
-	}
+
+	} # done parsing each file
 
 
 	$dbh->disconnect();
@@ -108,7 +121,6 @@ sub main {
 
 	print "$jobcount job messages in the list\n";
 
-	$msgcount--;
 	print "$msgcount total messages in $filecount files\n";
 }
 

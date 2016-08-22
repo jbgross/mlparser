@@ -1,6 +1,7 @@
 -- file to build database in sqlite3 for parsing of SIGCSE-MEMBERS mailing list
 -- author: joshua gross (gross.joshua.b@gmail.com)
 drop view if exists messageinfo;
+drop view if exists jobmessageinfo;
 drop table if exists candidateinstitution;
 drop table if exists candidatecontact;
 drop table if exists message;
@@ -48,6 +49,7 @@ matchcount integer not null,
 matchpercent real not null,
 wordcount integer not null,
 ratio real not null,
+badsubject integer not null,
 /*
 tenured integer not null,
 tenuretrack integer not null,
@@ -92,7 +94,37 @@ where
 	AND
 	m.candidatecontactid = cc.candidatecontactid;
 
-
+create view jobmessageinfo as
+select
+	ci.name,
+	ci.domain,
+	cc.address,
+	cc.firstname,
+	cc.lastname,
+	jm.sure,
+	jm.matchcount,
+	round(jm.matchpercent, 2) as matchpercent,
+	jm.wordcount,
+	round(jm.ratio, 2) as ratio,
+	jm.badsubject,
+	m.messageid,
+	m.month,
+	m.year,
+	m.academicyear,
+	m.isjob,
+	substr(m.subject, 0, 25) as subject,
+	substr(m.body, 0, 25) as body
+from
+	candidateinstitution ci,
+	candidatecontact cc,
+	message m,
+	jobmessage jm
+where
+	m.candidateinstitutionid = ci.candidateinstitutionid
+	AND
+	m.candidatecontactid = cc.candidatecontactid
+	AND
+	m.messageid = jm.messageid;
 /*
 create table institution (
 domain text not null primary key, -- not going to worry about schools with multiple domains (damn you, uw.edu/washington.edu)
