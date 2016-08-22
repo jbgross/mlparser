@@ -73,7 +73,7 @@ sub parse ($$$) {
 	$self->parseSubject();
 
 	# merge lines ending in equals signs
-	$self->{messagetext} =~ s/[^=]=\n//g;
+	$self->{messagetext} =~ s/([^=])=\n/$1/g;
 
 	# strip any other address in <>
 	$self->{messagetext} =~ s/\<[\w\._\-]+\@[\w\.]+\>//g;
@@ -173,6 +173,7 @@ sub parseSubject {
 	my $self = shift;
 	if ($self->{messagetext} =~ m/Subject:\s+(.*)/) {
 		$self->{subject} = $1;
+		$self->{subject} =~ s/^(re|fwd)\:\s*//i;
 	} else {
 		print "no subject from email from $self->{contactaddress} on in $self->{month}, $self->{year} in $self->{filename}\n";
 	}
@@ -269,22 +270,23 @@ sub parseDate () {
 # get the name of the institution
 sub parseInstitutionName {
 	my $self = shift;
+	my $localtext = $self->{messagetext};
 
 	# strip out colleges within schools and some other stuff
-	$self->{messagetext} =~ s/(faculty|college) of? (arts|informatics|engineering|computing|comm|sci)\w*//ig;
-	$self->{messagetext} =~ s/(the (college|university))/$2/ig;
+	$localtext =~ s/(faculty|college) of? (arts|informatics|engineering|computing|comm|sci)\w*//ig;
+	$localtext =~ s/(the (college|university))/$2/ig;
 
-	# $self->{messagetext} =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
-	$self->{messagetext} =~ s/computer science department//ig;
-	$self->{messagetext} =~ s/department of computer science//ig;
-	# $self->{messagetext} =~ s/fine arts//ig;
-	# $self->{messagetext} =~ s/computing//ig;
-	# $self->{messagetext} =~ s/professor//ig;
-	# $self->{messagetext} =~ s/positions?//ig;
-	# $self->{messagetext} =~ s/(^| )cs //ig;
+	# $localtext =~ s/\d+ \w+ (street|avenue|boulevard|st|ave|blvd)\.?//ig;
+	$localtext =~ s/computer science department//ig;
+	$localtext =~ s/department of computer science//ig;
+	# $localtext =~ s/fine arts//ig;
+	# $localtext =~ s/computing//ig;
+	# $localtext =~ s/professor//ig;
+	# $localtext =~ s/positions?//ig;
+	# $localtext =~ s/(^| )cs //ig;
 
 	# this creates problems
-	#if ($self->{messagetext} =~ m/((The )?Association (of|for)(\s\w+)+)/i
+	#if ($localtext =~ m/((The )?Association (of|for)(\s\w+)+)/i
 
 	my $org = "";
 	my $schoolword = '([a-zA-Z]+|St\.)';
@@ -292,11 +294,11 @@ sub parseInstitutionName {
 	my $splitBefore = '[ \&ofat]+';
 	my $splitAfter = '[ \&\,\-ofat]+';
 
-	if ($self->{messagetext} =~ /(($schoolword$splitBefore){1,3}(College|University))/) {
+	if ($localtext =~ /(($schoolword$splitBefore){1,3}(College|University))/) {
 		# look for "X College" or "X University", etc.
 		$org = $1;
 		#print "first pattern - $org\n";
-	} elsif ($self->{messagetext} =~ /((College|University)($splitAfter$schoolword){1,3})/) {
+	} elsif ($localtext =~ /((College|University)($splitAfter$schoolword){1,3})/) {
 		# look for "College of X" or "University of X", etc.
 		$org = $1;
 		#print "second pattern - $org\n";

@@ -6,11 +6,13 @@ package Job;
 
 my $requiredpercent = 0.1;
 
-my $badsubjects = "(do you require|faculty who are poor|how do you know if|call for part|call for papers|capacity crisis in|free workshop|human resource machine|need a strange kind|is there some|denice denton|share what you|analytic skills|respect 2016|philosophy of assigning|alternatives to scratch|cfp|share your work|share what you|flipped classroom book|eduplop|icer|toce editor|deadline for acm|nsf-funded|eduhpc|travel grant|cra invites|experiences hiring into|hosting a course on github|questions regarding abet|women in cybersecurity conference|forced distribution|CSAB)";
+my $badsubjects = "(do you require|faculty who are poor|how do you know if|call for part|call for papers|capacity crisis in|free workshop|human resource machine|need a strange kind|is there some|denice denton|share what you|analytic skills|respect 2016|philosophy of assigning|alternatives to scratch|cfp|share your work|share what you|flipped classroom book|eduplop|icer|toce editor|deadline for acm|nsf-funded|eduhpc|travel grant|cra invites|experiences hiring into|hosting a course on github|questions regarding abet|women in cybersecurity conference|forced distribution|CSAB|fizzbuzz|iticse|issue|projects|GHC Scholarship)";
 
 my @searchterms = (
+'assistant or associate',
 'apply',
 'applications?',
+'accepting',
 'application process',
 'appointment',
 'evaluation of applications',
@@ -21,6 +23,7 @@ my @searchterms = (
 'position is filled',
 'positions are filled',
 'hiring',
+'opening',
 
 'candidates',
 'employer',
