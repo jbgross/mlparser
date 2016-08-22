@@ -239,7 +239,7 @@ sub parseContact {
 		$self->{firstname} = "";
 		$self->{lastname}  = "";
 	} else {
-		warn "No Reply-To or From in msg ". substr($self->{messagetext},0,25)."in file $self-{filename}\n";
+		warn "No Reply-To or From in msg ". substr($self->{messagetext},0,25)."in file $self->{filename}\n";
 	}
 	$self->{domain} =~ s/.*\.(.*\.edu)/$1/i;
 }
