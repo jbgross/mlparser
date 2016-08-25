@@ -1,0 +1,14 @@
+create view jobmessageinfo as select ci.name, ci.domain, cc.address, cc.firstname, cc.lastname, jm.sure, jm.matchcount, round(jm.matchpercent, 2) as matchpercent, jm.wordcount, round(jm.ratio, 2) as ratio, jm.badsubject, m.messageid, m.month, m.year, m.academicyear, m.isjob, m.filename, substr(m.subject, 0, 40) as subject, substr(m.body, 0, 25) as body from candidateinstitution ci, candidatecontact cc, message m, jobmessage jm where m.candidateinstitutionid = ci.candidateinstitutionid AND m.candidatecontactid = cc.candidatecontactid AND m.messageid = jm.messageid;
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+A
+

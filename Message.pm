@@ -254,7 +254,7 @@ sub parseDate () {
 		$self->{month} = $3;
 		$self->{year} = $4;
 		if($self->{month} =~ m/(Jan|Feb|Mar|Apr|May|Jun)/) {
-			$self->{academicyear} = $self->{year}-1;
+			$self->{academicyear} = $self->{year};
 		} elsif ($self->{month} =~ m/(Jul|Aug|Sep|Oct|Nov|Dec)/) {
 			$self->{academicyear} = $self->{year}-1;
 		} else {
