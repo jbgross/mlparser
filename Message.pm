@@ -23,6 +23,20 @@ my $ccisth = "";
 my $candContactIdSelect = "SELECT candidatecontactid from candidatecontact where address= ? and firstname = ? and lastname = ?";
 my $ccissth = "";
 
+my $monthhash = {
+'Jan' => 1,
+'Feb' => 2,
+'Mar' => 3,
+'Apr' => 4,
+'May' => 5,
+'Jun' => 6,
+'Jul' => 7,
+'Aug' => 8,
+'Sep' => 9,
+'Oct' => 10,
+'Nov' => 11,
+'Dec' => 12};
+
 sub addDatabase($) {
 	$dbh = shift;
 	$misth = $dbh->prepare($messageInsert);
@@ -251,12 +265,15 @@ sub parseDate () {
 	if($self->{messagetext} =~ m/Date:\s+(\w{3}),\s+(\d{1,2})\s+(\w{3})\s+(\d{4})/) {
 		$self->{day} = $1;
 		$self->{date} = $2;
-		$self->{month} = $3;
+		# convert month to number
+		$self->{month} = $monthhash->{$3};
 		$self->{year} = $4;
-		if($self->{month} =~ m/(Jan|Feb|Mar|Apr|May|Jun)/) {
-			$self->{academicyear} = $self->{year};
-		} elsif ($self->{month} =~ m/(Jul|Aug|Sep|Oct|Nov|Dec)/) {
+		# assign all posts to the academic year from Jul-Jun, with the starting year
+		# as the academic year, e.g., Oct, 2012 is AY 2012, as is Feb 2013
+		if($self->{month} <= 6) {
 			$self->{academicyear} = $self->{year}-1;
+		} elsif ($self->{month} > 6 && $self->{month} <= 12){
+			$self->{academicyear} = $self->{year};
 		} else {
 			warn "Can't match month $self->{month}\n";
 		}

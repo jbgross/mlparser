@@ -91,6 +91,7 @@ sub new ($) {
 	$self->{teachingprofessor} = 0;
 	$self->{professorofpractice} = 0;
 	$self->{phd} = 0;
+	$self->{earneddoctorate} = 0;
 	$self->{masters} = 0;
 	$self->{securityofemployment} = 0;
 	$self->{temporaryfixed} = 0;
@@ -98,6 +99,7 @@ sub new ($) {
 	$self->{multiple} = 0;
 	$self->{fulltime} = 0;
 	$self->{parttime} = 0;
+	$self->{rankopen} = 0;
 	$self->{adjunct} = 0;
 
 	# empty array reference
@@ -150,7 +152,7 @@ sub parseKeywords {
 	$self->{lecturer} = 1 if ($body =~ m/lecturer/i);
 	$self->{assistantprofessor} = 1 if ($body =~ m/assistant professor/i);
 	$self->{associateprofessor} = 1 if ($body =~ m/associate professor/i);
-	$self->{teaching professor} = 1 if ($body =~ m/teaching (associate|assistant|full)? professor/i);
+	$self->{teachingprofessor} = 1 if ($body =~ m/teaching (associate|assistant|full)? professor/i);
 	$self->{professorofpractice} = 1 if ($body =~ m/professor of (the )?practice/i);
 	$self->{phd} = 1 if ($body =~ m/phd/i);
 	$self->{earneddoctorate} = 1 if ($body =~ m/earned (doctorate|doctoral degree)/i);
@@ -161,6 +163,7 @@ sub parseKeywords {
 	$self->{multiple} = 1 if ($body =~ m/multiple/i);
 	$self->{fulltime} = 1 if ($body =~ m/full[ -]?time/i);
 	$self->{parttime} = 1 if ($body =~ m/part[ -]?time/i);
+	$self->{rankopen} = 1 if ($body =~ m/(rank open|open rank)/i);
 	$self->{adjunct} = 1 if ($body =~ m/adjunct/i);
 }
 
@@ -189,12 +192,12 @@ sub addToDatabase {
 				"assistantprofessor, associateprofessor, teachingprofessor, professorofpractice, ".#13-16
 				"phd, earneddoctorate, masters, securityofemployment, ". #17-20
 				"temporaryfixed, visiting, multiple, fulltime, ". #21-24
-				"parttime, adjunct". #25-26
+				"parttime, rankopen, adjunct". #25-27
 				") values (".
 				"?, ?, ?, ?, ?, ?, ?, ?, ".
 				"?, ?, ?, ?, ?, ?, ?, ?, ".
 				"?, ?, ?, ?, ?, ?, ?, ?, ".
-				"?, ?".
+				"?, ?, ?".
 				")";
 
 		my $sth = $dbh->prepare($insertjm);
@@ -213,17 +216,19 @@ sub addToDatabase {
 		$sth->bind_param(12, $self->{lecturer}, $DBI::SQL_INTEGER);
 		$sth->bind_param(13, $self->{assistantprofessor}, $DBI::SQL_INTEGER);
 		$sth->bind_param(14, $self->{associateprofessor}, $DBI::SQL_INTEGER);
-		$sth->bind_param(15, $self->{teaching professor}, $DBI::SQL_INTEGER);
+		$sth->bind_param(15, $self->{teachingprofessor}, $DBI::SQL_INTEGER);
 		$sth->bind_param(16, $self->{professorofpractice}, $DBI::SQL_INTEGER);
 		$sth->bind_param(17, $self->{phd}, $DBI::SQL_INTEGER);
-		$sth->bind_param(19, $self->{phd}, $DBI::SQL_INTEGER);
-		$sth->bind_param(20, $self->{masters}, $DBI::SQL_INTEGER);
-		$sth->bind_param(21, $self->{securityofemployment}, $DBI::SQL_INTEGER);
-		$sth->bind_param(22, $self->{temporaryfixed}, $DBI::SQL_INTEGER);
-		$sth->bind_param(23, $self->{visiting}, $DBI::SQL_INTEGER);
-		$sth->bind_param(24, $self->{multiple}, $DBI::SQL_INTEGER);
-		$sth->bind_param(25, $self->{fulltime}, $DBI::SQL_INTEGER);
-		$sth->bind_param(26, $self->{parttime}, $DBI::SQL_INTEGER);
+		$sth->bind_param(18, $self->{earneddoctorate}, $DBI::SQL_INTEGER);
+		$sth->bind_param(19, $self->{masters}, $DBI::SQL_INTEGER);
+		$sth->bind_param(20, $self->{securityofemployment}, $DBI::SQL_INTEGER);
+		$sth->bind_param(21, $self->{temporaryfixed}, $DBI::SQL_INTEGER);
+		$sth->bind_param(22, $self->{visiting}, $DBI::SQL_INTEGER);
+		$sth->bind_param(23, $self->{multiple}, $DBI::SQL_INTEGER);
+		$sth->bind_param(24, $self->{fulltime}, $DBI::SQL_INTEGER);
+		$sth->bind_param(25, $self->{parttime}, $DBI::SQL_INTEGER);
+		$sth->bind_param(26, $self->{rankopen}, $DBI::SQL_INTEGER);
+		$sth->bind_param(27, $self->{adjunct}, $DBI::SQL_INTEGER);
 
 		$sth->execute();
 		$dbh->commit();

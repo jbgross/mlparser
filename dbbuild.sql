@@ -1,5 +1,7 @@
 -- file to build database in sqlite3 for parsing of SIGCSE-MEMBERS mailing list
 -- author: joshua gross (gross.joshua.b@gmail.com)
+drop view if exists jobkeywordsum;
+drop view if exists jobkeyword;
 drop view if exists messageinfo;
 drop view if exists jobmessageinfo;
 drop table if exists candidateinstitution;
@@ -126,6 +128,7 @@ select
 	jm.teachingprofessor,
 	jm.professorofpractice,
 	jm.phd,
+	jm.earneddoctorate,
 	jm.masters,
 	jm.securityofemployment,
 	jm.temporaryfixed,
@@ -146,6 +149,65 @@ where
 	m.candidatecontactid = cc.candidatecontactid
 	AND
 	m.messageid = jm.messageid;
+
+/* only look at the keyword attributes */
+create view jobkeyword as
+select
+	messageid,
+	academicyear,
+	isjob,
+	tenured,
+	tenuretrack,
+	nontenuretrack,
+	instructor,
+	lecturer,
+	assistantprofessor,
+	associateprofessor,
+	teachingprofessor,
+	professorofpractice,
+	phd,
+	earneddoctorate,
+	masters,
+	securityofemployment,
+	temporaryfixed,
+	visiting,
+	multiple,
+	fulltime,
+	parttime,
+	rankopen,
+	adjunct
+from
+	jobmessageinfo;
+
+create view jobkeywordsum as
+select
+	academicyear,
+	sum(isjob) as isjob,
+	sum(tenured) as tenured,
+	sum(tenuretrack) as tenuretrack,
+	sum(nontenuretrack) as nontenuretrack,
+	sum(instructor) as instructor,
+	sum(lecturer) as lecturer,
+	sum(assistantprofessor) as assistantprofessor,
+	sum(associateprofessor) as associateprofessor,
+	sum(teachingprofessor) as teachingprofessor,
+	sum(professorofpractice) as professorofpractice ,
+	sum(phd) as phd,
+	sum(earneddoctorate) as earneddoctorate,
+	sum(masters) as masters,
+	sum(securityofemployment) as securityofemployment,
+	sum(temporaryfixed) as temporaryfixed,
+	sum(visiting) as visiting,
+	sum(multiple) as multiple,
+	sum(fulltime) as fulltime,
+	sum(parttime) as parttime,
+	sum(rankopen) as rankopen,
+	sum(adjunct) as adjunct
+from
+	jobkeyword
+group by
+	academicyear;
+
 /*
 create table institution (
 domain text not null primary key, -- not going to worry about schools with multiple domains (damn you, uw.edu/washington.edu)
