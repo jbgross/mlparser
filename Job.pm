@@ -79,6 +79,27 @@ sub new ($) {
 	$self->{ratio} = 0;
 	$self->{badsubject} = 0;
 	$self->{message} = "";
+	$self->{badsubject} = 0;
+
+	$self->{tenured} = 0;
+	$self->{tenuretrack} = 0;
+	$self->{nontenuretrack} = 0;
+	$self->{instructor} = 0;
+	$self->{lecturer} = 0;
+	$self->{assistantprofessor} = 0;
+	$self->{associateprofessor} = 0;
+	$self->{teachingprofessor} = 0;
+	$self->{professorofpractice} = 0;
+	$self->{phd} = 0;
+	$self->{masters} = 0;
+	$self->{securityofemployment} = 0;
+	$self->{temporaryfixed} = 0;
+	$self->{visiting} = 0;
+	$self->{multiple} = 0;
+	$self->{fulltime} = 0;
+	$self->{parttime} = 0;
+	$self->{adjunct} = 0;
+
 	# empty array reference
 	$self->{matchedterms} = [];
 	bless($self, $class); # Bestow objecthood
@@ -111,8 +132,36 @@ sub parse($) {
 	}
 	$self->{matchpercent} = $self->{matchcount}/$termcount;
 	$self->{ratio} = $self->{matchcount}/$self->{wordcount};
+
+	$self->parseKeywords();
+
 	#if($self->{matchcount} > 4) { print "$self->{matchcount} matches $self->{matchpercent}\n"; }
 	#if($self->{sure} == 1) { print "sure $self->{sure}term\n"; }
+}
+
+sub parseKeywords {
+	my $self = shift;
+	my $body = $self->{message}->subject()." ".$self->{message}->messageBody();
+	$self->{tenured} = 1 if ($body =~ m/tenured/i);
+	# actually have to purge this so that we can match tenure-track
+	$self->{nontenuretrack} = 1 if ($body =~ s/non[ -]tenure[- ]track//ig);
+	$self->{tenuretrack} = 1 if ($body =~ m/tenure[ -]track/i);
+	$self->{instructor} = 1 if ($body =~ m/tenured/i);
+	$self->{lecturer} = 1 if ($body =~ m/lecturer/i);
+	$self->{assistantprofessor} = 1 if ($body =~ m/assistant professor/i);
+	$self->{associateprofessor} = 1 if ($body =~ m/associate professor/i);
+	$self->{teaching professor} = 1 if ($body =~ m/teaching (associate|assistant|full)? professor/i);
+	$self->{professorofpractice} = 1 if ($body =~ m/professor of (the )?practice/i);
+	$self->{phd} = 1 if ($body =~ m/phd/i);
+	$self->{earneddoctorate} = 1 if ($body =~ m/earned (doctorate|doctoral degree)/i);
+	$self->{masters} = 1 if ($body =~ m/(master\'?s|MS)/);
+	$self->{securityofemployment} = 1 if ($body =~ m/(security of employment|employment security)/i);
+	$self->{temporaryfixed} = 1 if ($body =~ m/(temporary|fixed[ -]term)/i);
+	$self->{visiting} = 1 if ($body =~ m/visiting/i);
+	$self->{multiple} = 1 if ($body =~ m/multiple/i);
+	$self->{fulltime} = 1 if ($body =~ m/full[ -]?time/i);
+	$self->{parttime} = 1 if ($body =~ m/part[ -]?time/i);
+	$self->{adjunct} = 1 if ($body =~ m/adjunct/i);
 }
 
 sub matchedTerms() {
@@ -133,9 +182,23 @@ sub addToDatabase {
 	my $self = shift;
 	my $dbh = shift;
 	eval {
-		my $insertjm = "insert into jobmessage (messageid, sure, matchcount, matchpercent, wordcount, ratio, badsubject) ".
-				"values (?, ?, ?, ?, ?, ?, ?)";
+		my $insertjm = "insert into jobmessage (".
+				"messageid, sure, matchcount, matchpercent, ". #1-4
+				"wordcount, ratio, badsubject, tenured, ". #5-8
+				"tenuretrack, nontenuretrack, instructor, lecturer, ". #9-12
+				"assistantprofessor, associateprofessor, teachingprofessor, professorofpractice, ".#13-16
+				"phd, earneddoctorate, masters, securityofemployment, ". #17-20
+				"temporaryfixed, visiting, multiple, fulltime, ". #21-24
+				"parttime, adjunct". #25-26
+				") values (".
+				"?, ?, ?, ?, ?, ?, ?, ?, ".
+				"?, ?, ?, ?, ?, ?, ?, ?, ".
+				"?, ?, ?, ?, ?, ?, ?, ?, ".
+				"?, ?".
+				")";
+
 		my $sth = $dbh->prepare($insertjm);
+
 		$sth->bind_param(1, $self->{message}->messageId(), $DBI::SQL_INTEGER);
 		$sth->bind_param(2, $self->{sure}, $DBI::SQL_INTEGER);
 		$sth->bind_param(3, $self->{matchcount}, $DBI::SQL_INTEGER);
@@ -143,6 +206,25 @@ sub addToDatabase {
 		$sth->bind_param(5, $self->{wordcount}, $DBI::SQL_INTEGER);
 		$sth->bind_param(6, $self->{ratio}, $DBI::SQL_DOUBLE);
 		$sth->bind_param(7, $self->{badsubject}, $DBI::SQL_INTEGER);
+		$sth->bind_param(8, $self->{tenured}, $DBI::SQL_INTEGER);
+		$sth->bind_param(9, $self->{tenuretrack}, $DBI::SQL_INTEGER);
+		$sth->bind_param(10, $self->{nontenuretrack}, $DBI::SQL_INTEGER);
+		$sth->bind_param(11, $self->{instructor}, $DBI::SQL_INTEGER);
+		$sth->bind_param(12, $self->{lecturer}, $DBI::SQL_INTEGER);
+		$sth->bind_param(13, $self->{assistantprofessor}, $DBI::SQL_INTEGER);
+		$sth->bind_param(14, $self->{associateprofessor}, $DBI::SQL_INTEGER);
+		$sth->bind_param(15, $self->{teaching professor}, $DBI::SQL_INTEGER);
+		$sth->bind_param(16, $self->{professorofpractice}, $DBI::SQL_INTEGER);
+		$sth->bind_param(17, $self->{phd}, $DBI::SQL_INTEGER);
+		$sth->bind_param(19, $self->{phd}, $DBI::SQL_INTEGER);
+		$sth->bind_param(20, $self->{masters}, $DBI::SQL_INTEGER);
+		$sth->bind_param(21, $self->{securityofemployment}, $DBI::SQL_INTEGER);
+		$sth->bind_param(22, $self->{temporaryfixed}, $DBI::SQL_INTEGER);
+		$sth->bind_param(23, $self->{visiting}, $DBI::SQL_INTEGER);
+		$sth->bind_param(24, $self->{multiple}, $DBI::SQL_INTEGER);
+		$sth->bind_param(25, $self->{fulltime}, $DBI::SQL_INTEGER);
+		$sth->bind_param(26, $self->{parttime}, $DBI::SQL_INTEGER);
+
 		$sth->execute();
 		$dbh->commit();
 	};
